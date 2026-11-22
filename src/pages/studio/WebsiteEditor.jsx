@@ -3,13 +3,18 @@ import { api } from '../../api.js';
 import { useAsync } from '../../components/ui.jsx';
 
 const SECTION_LABELS = { about: 'About', portfolio: 'Portfolio', packages: 'Packages & pricing', testimonials: 'Testimonials', faq: 'FAQ', contact: 'Contact & enquiry' };
-const FONT_PAIRS = { editorial: 'Cormorant + Inter', classic: 'Playfair + Inter', modern: 'DM Serif + Inter' };
+const FONT_PAIRS = { template: "Template's own fonts", editorial: 'Cormorant + Inter', classic: 'Playfair + Inter', modern: 'DM Serif + Inter' };
 const SWATCHES = ['#9a6b3c', '#b08d57', '#7a1f2b', '#2f4f4f', '#3f5d7d', '#1c1917', '#a0522d', '#6d4c7d'];
+// Card previews + the accent colour each template is designed around.
 const PREVIEW = {
-  editorial: { background: '#fbfaf7', color: '#1c1917', font: 'Cormorant Garamond' },
-  luxe: { background: 'linear-gradient(135deg,#f6efe3,#ead9bf)', color: '#5a4320', font: 'Playfair Display' },
-  cinematic: { background: '#111', color: '#f2ede6', font: 'DM Serif Display' },
+  editorial: { background: '#fbfaf7', color: '#1c1917', font: 'Cormorant Garamond', accent: '#9a6b3c' },
+  luxe: { background: 'linear-gradient(135deg,#f6efe3,#ead9bf)', color: '#5a4320', font: 'Playfair Display', accent: '#b08d57' },
+  cinematic: { background: '#111', color: '#f2ede6', font: 'DM Serif Display', accent: '#b08d57' },
+  boho: { background: 'radial-gradient(circle at 70% 40%,#e7cdb2,#f4ede3 60%)', color: '#3b2f25', font: 'Caveat', size: 30, accent: '#b5653d' },
+  indian: { background: 'linear-gradient(#4a0e17 0 28%,#fbf4e6 28%)', color: '#3a0d12', font: 'Cinzel', accent: '#b8862b', pad: '34px 0 0' },
+  grid: { background: '#fff', color: '#0c0a09', font: 'Space Grotesk', weight: 700, accent: '#0c0a09', border: true },
 };
+const TEMPLATE_ACCENTS = Object.values(PREVIEW).map((p) => p.accent.toLowerCase());
 
 // Minimal customization by design: brand, colour, fonts, sections, content, contact, SEO.
 export default function WebsiteEditor({ studio, onSaved }) {
@@ -57,6 +62,12 @@ export default function WebsiteEditor({ studio, onSaved }) {
       set({ logoKey: key, logoUrl: URL.createObjectURL(file) });
     });
 
+  // Picking a template switches to its own fonts, and to its colour unless the studio set its own brand colour.
+  const pickTemplate = (id) => {
+    const keepAccent = !TEMPLATE_ACCENTS.includes(String(site.theme.accent).toLowerCase());
+    set({ templateId: id, theme: { fontPair: 'template', accent: keepAccent ? site.theme.accent : (PREVIEW[id] || PREVIEW.editorial).accent } });
+  };
+
   const moveSection = (i, dir) => {
     const s = [...site.sections];
     const j = i + dir;
@@ -84,8 +95,8 @@ export default function WebsiteEditor({ studio, onSaved }) {
             const locked = t.tier === 'premium' && !studio.plan.premium_templates;
             const p = PREVIEW[t.id] || PREVIEW.editorial;
             return (
-              <button key={t.id} type="button" className={`template-card ${site.templateId === t.id ? 'active' : ''}`} disabled={locked} onClick={() => set({ templateId: t.id })} style={locked ? { opacity: 0.55 } : undefined}>
-                <div className="preview" style={{ background: p.background, color: p.color, fontFamily: p.font }}>{studio.name}</div>
+              <button key={t.id} type="button" className={`template-card ${site.templateId === t.id ? 'active' : ''}`} disabled={locked} onClick={() => pickTemplate(t.id)} style={locked ? { opacity: 0.55 } : undefined}>
+                <div className="preview" style={{ background: p.background, color: p.color, fontFamily: p.font, fontSize: p.size, fontWeight: p.weight, padding: p.pad, borderBottom: p.border ? '1px solid #e7e5e4' : undefined }}>{studio.name}</div>
                 <div className="body">
                   <b>{t.name}</b> {t.tier === 'premium' && <span className="badge accent">Premium</span>}
                   <div className="small muted">{locked ? 'Available on Pro and above' : t.description}</div>
