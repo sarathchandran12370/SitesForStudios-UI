@@ -59,7 +59,7 @@ export default function EventManage() {
         <div>
           <h1>{event.title}</h1>
           <p className="muted" style={{ margin: 0 }}>
-            {[fmtDate(event.event_date), event.venue, fmtBytes(event.storage_bytes)].filter(Boolean).join(' · ')}
+            {[fmtDate(event.event_date), event.venue, fmtBytes(event.storage_bytes), event.status === 'active' && event.expires_at && `online until ${fmtDate(event.expires_at)}`].filter(Boolean).join(' · ')}
           </p>
         </div>
         <div className="row">
@@ -77,9 +77,11 @@ export default function EventManage() {
           {event.clients.map((c) => <span key={c.id} className="badge">{c.name} · {c.access_level === 'primary' ? 'couple' : 'guest'}</span>)}
           {!event.clients.length && <span className="muted">No clients yet. Add the couple from the Clients tab so they can log in.</span>}
         </div>
+        {event.clients.length > 0 && event.status === 'active' && <NotifyClients event={event} onDone={loadEvent} />}
       </div>
 
-      <Uploader event={event} onDone={(n) => { setMessage(`${n} file(s) uploaded. Processing…`); loadPhotos(); loadEvent(); }} />
+      {event.status !== 'active' && <ArchiveNotice event={event} onChanged={loadEvent} />}
+      {event.status === 'active' && <Uploader event={event} onDone={(n) => { setMessage(`${n} file(s) uploaded. Processing…`); loadPhotos(); loadEvent(); }} />}
       {message && <p className="ok">{message}</p>}
 
       <div className="card stack">
@@ -155,6 +157,66 @@ export default function EventManage() {
   );
 }
 
+// Archived events: clients can't see them; the studio can buy a restore.
+function ArchiveNotice({ event, onChanged }) {
+  const [state, setState] = useState({ busy: false, error: '' });
+  const restore = async () => {
+    if (!confirm('Restore this gallery for ₹499? It will be billed with your next invoice. Files come back within about 12 hours and the gallery stays online for 6 more months.')) return;
+    setState({ busy: true, error: '' });
+    try {
+      await api(`/events/${event.id}/restore`, { method: 'POST' });
+      setState({ busy: false, error: '' });
+      onChanged();
+    } catch (e) {
+      setState({ busy: false, error: e.message });
+    }
+  };
+  return (
+    <div className="card stack" style={{ background: '#f8ecd9', borderColor: '#e8c990' }}>
+      {event.status === 'archived' ? (
+        <>
+          <div>
+            <b>Archived{event.archived_at ? ` on ${fmtDate(event.archived_at)}` : ''}.</b> The retention period ended, so clients can no longer view or download this gallery. Uploads are paused.
+          </div>
+          <div className="row">
+            <button className="btn primary sm" disabled={state.busy} onClick={restore}>{state.busy ? 'Requesting…' : 'Restore gallery (₹499)'}</button>
+            <span className="small muted">Back within about 12 hours, then online for 6 more months.</span>
+          </div>
+        </>
+      ) : (
+        <div><b>Restoring.</b> The files are coming back from the archive (up to about 12 hours). You and the couple will get an email when the gallery is online again.</div>
+      )}
+      {state.error && <div className="error">{state.error}</div>}
+    </div>
+  );
+}
+
+// One message to every client of the event: "your photos are ready" (email + WhatsApp).
+function NotifyClients({ event, onDone }) {
+  const [state, setState] = useState({ busy: false, msg: '', error: '' });
+  const send = async () => {
+    if (!confirm(`Send "your photos are ready" to ${event.clients.length} client(s) of ${event.title}?`)) return;
+    setState({ busy: true, msg: '', error: '' });
+    try {
+      const r = await api(`/events/${event.id}/notify-clients`, { method: 'POST' });
+      setState({ busy: false, msg: `Sent to ${r.emails} of ${r.clients} by email${r.whatsapps ? ` and ${r.whatsapps} by WhatsApp` : ''}.`, error: '' });
+      onDone();
+    } catch (e) {
+      setState({ busy: false, msg: '', error: e.message });
+    }
+  };
+  return (
+    <div className="row" style={{ borderTop: '1px solid var(--line)', paddingTop: 12 }}>
+      <button className="btn accent sm" disabled={state.busy} onClick={send}>{state.busy ? 'Sending…' : 'Notify clients: photos ready'}</button>
+      <span className="small muted">
+        {event.clients_notified_at ? `Last sent ${new Date(event.clients_notified_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}` : 'Not sent yet'}
+      </span>
+      {state.msg && <span className="small ok">{state.msg}</span>}
+      {state.error && <span className="small error">{state.error}</span>}
+    </div>
+  );
+}
+
 // Uploads go straight from the browser to storage using signed URLs, a few files at a time.
 function Uploader({ event, onDone }) {
   const [ceremony, setCeremony] = useState('Wedding');
@@ -215,10 +277,10 @@ function Uploader({ event, onDone }) {
           <select style={{ width: 'auto' }} value={ceremony} onChange={(e) => setCeremony(e.target.value)}>{CEREMONIES.map((c) => <option key={c}>{c}</option>)}</select>
         </label>
         <button className="btn primary" onClick={() => inputRef.current.click()}>Choose photos</button>
-        <input ref={inputRef} type="file" multiple hidden accept="image/jpeg,image/png,image/webp,.cr2,.cr3,.nef,.arw,.raf,.orf,.rw2,.dng" onChange={(e) => { start(e.target.files); e.target.value = ''; }} />
+        <input ref={inputRef} type="file" multiple hidden accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif,.cr2,.cr3,.nef,.arw,.raf,.orf,.rw2,.dng" onChange={(e) => { start(e.target.files); e.target.value = ''; }} />
       </div>
       <p className="small muted" style={{ marginBottom: 0 }}>
-        Or drag and drop. JPEG, PNG, WebP{event.raw_enabled ? ', and RAW files (CR3, NEF, ARW, DNG…)' : '. Turn on RAW delivery in Settings to upload RAW files'}.
+        Or drag and drop. JPEG, PNG, WebP, HEIC (iPhone){event.raw_enabled ? ', and RAW files (CR3, NEF, ARW, DNG…)' : '. Turn on RAW delivery in Settings to upload RAW files'}.
       </p>
       {progress && (
         <div className="stack" style={{ marginTop: 14, gap: 6, textAlign: 'left' }}>

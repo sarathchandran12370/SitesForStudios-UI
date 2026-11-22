@@ -24,6 +24,14 @@ npm run build
 
 builds static files into `dist/`.
 
+## Tests
+
+```bash
+npm test
+```
+
+Runs the Vitest + Testing Library suite (host detection, login and password screens, suspended-account notice, Super Admin plan editor, website enquiry form). The API is mocked, so no server is needed.
+
 ## Structure
 
 ```

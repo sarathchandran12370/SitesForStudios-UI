@@ -13,7 +13,11 @@ export async function api(path, { method = 'GET', body, headers, raw } = {}) {
     body: raw ? body : body !== undefined ? JSON.stringify(body) : undefined,
   });
   const data = res.headers.get('content-type')?.includes('json') ? await res.json() : null;
-  if (!res.ok) throw new ApiError(res.status, data?.error || `Request failed (${res.status})`);
+  if (!res.ok) {
+    // The organization was suspended while this user was logged in: let the app show the notice.
+    if (data?.code === 'ORG_BLOCKED') window.dispatchEvent(new CustomEvent('sfs:org-blocked'));
+    throw new ApiError(res.status, data?.error || `Request failed (${res.status})`);
+  }
   return data;
 }
 

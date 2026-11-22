@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, fmtBytes, fmtDate } from '../../api.js';
-import { Modal, useAsync } from '../../components/ui.jsx';
+import { Modal, StatusBadge, useAsync } from '../../components/ui.jsx';
 
 export default function StudioEvents({ studio }) {
   const [events, setEvents] = useState([]);
@@ -19,7 +19,7 @@ export default function StudioEvents({ studio }) {
       <div className="card">
         <div className="table-wrap">
           <table className="table">
-            <thead><tr><th>Event</th><th>Date</th><th>Venue</th><th>Clients</th><th>Storage</th><th>Options</th><th /></tr></thead>
+            <thead><tr><th>Event</th><th>Date</th><th>Venue</th><th>Clients</th><th>Storage</th><th>Online until</th><th>Options</th><th /></tr></thead>
             <tbody>
               {events.map((e) => (
                 <tr key={e.id}>
@@ -28,6 +28,7 @@ export default function StudioEvents({ studio }) {
                   <td className="muted">{e.venue}</td>
                   <td>{e.client_count}</td>
                   <td>{fmtBytes(e.storage_bytes)}</td>
+                  <td className="small">{e.status === 'active' ? fmtDate(e.expires_at) : <StatusBadge value={e.status} />}</td>
                   <td className="row" style={{ gap: 4 }}>
                     {e.raw_enabled && <span className="badge">RAW</span>}
                     {e.face_enabled && <span className="badge">Faces</span>}
@@ -36,7 +37,7 @@ export default function StudioEvents({ studio }) {
                   <td><Link className="btn sm" to={`/events/${e.id}`}>Manage</Link></td>
                 </tr>
               ))}
-              {!events.length && <tr><td colSpan={7} className="muted">No events yet. Create one, upload photos, then add the couple as a client.</td></tr>}
+              {!events.length && <tr><td colSpan={8} className="muted">No events yet. Create one, upload photos, then add the couple as a client.</td></tr>}
             </tbody>
           </table>
         </div>

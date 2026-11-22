@@ -198,7 +198,7 @@ function Hero({ images, studio, site, onEnquire }) {
   );
 }
 
-function EnquiryForm({ slug }) {
+export function EnquiryForm({ slug }) {
   const [f, setF] = useState({ name: '', phone: '', email: '', eventDate: '', city: '', eventType: 'Wedding', budget: '', message: '', website: '' });
   const [state, setState] = useState({ busy: false, error: '', done: null });
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });

@@ -1,5 +1,7 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useAuth, homeFor } from './auth.jsx';
+import { useAuth, homeFor, isOrgBlocked } from './auth.jsx';
+import AccountBlocked from './components/AccountBlocked.jsx';
+import { isAppHost } from './hosts.js';
 import Login from './pages/Login.jsx';
 import ChangePassword from './pages/ChangePassword.jsx';
 import Landing from './pages/Landing.jsx';
@@ -12,26 +14,14 @@ import MyEvents from './pages/portal/MyEvents.jsx';
 import EventView from './pages/portal/EventView.jsx';
 import SiteRenderer from './site/SiteRenderer.jsx';
 
-// Hosts that serve the platform app itself. Any other host is a studio's custom domain.
-// Extra hosts come from VITE_APP_HOSTS at build time (comma-separated), set by the deploy workflow.
-const APP_HOSTS = [
-  'localhost',
-  '127.0.0.1',
-  'app.sitesforstudios.com',
-  'sitesforstudios.com',
-  'www.sitesforstudios.com',
-  ...String(import.meta.env.VITE_APP_HOSTS || '')
-    .split(',')
-    .map((h) => h.trim().toLowerCase())
-    .filter(Boolean),
-];
-const isAppHost = (host) => APP_HOSTS.includes(host) || host.endsWith('.cloudfront.net');
+
 
 function Protected({ roles, children }) {
   const { user } = useAuth();
   const loc = useLocation();
   if (user === undefined) return <div className="center-page muted">Loading…</div>;
   if (!user) return <Navigate to="/login" state={{ from: loc.pathname }} replace />;
+  if (isOrgBlocked(user)) return <AccountBlocked />;
   if (user.must_change_password && loc.pathname !== '/change-password') return <Navigate to="/change-password" replace />;
   if (roles && !roles.includes(user.role)) return <Navigate to={homeFor(user)} replace />;
   return children;

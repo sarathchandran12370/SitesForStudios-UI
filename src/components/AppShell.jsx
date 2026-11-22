@@ -30,6 +30,11 @@ export default function AppShell() {
         </div>
       </aside>
       <main className="main">
+        {user.org_status === 'past_due' && (
+          <div className="card" style={{ background: '#f8ecd9', borderColor: '#e8c990', marginBottom: 16, padding: '12px 16px' }}>
+            <b>Payment overdue.</b> Your subscription payment did not go through. Update your payment to avoid your account being suspended.
+          </div>
+        )}
         <Outlet context={{ studios, reloadStudios: () => api('/studios/mine').then(setStudios) }} />
       </main>
     </div>

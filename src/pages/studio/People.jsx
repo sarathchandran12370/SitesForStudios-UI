@@ -18,8 +18,8 @@ export default function People({ studio, role }) {
 
   const reset = async (a) => {
     if (!confirm(`Reset the password for ${a.name}? They will be logged out and get a new temporary password.`)) return;
-    const r = await api(`/studios/accounts/${a.id}/reset-password`, { method: 'POST' });
-    setSecret({ title: 'Password reset', label: `Send ${a.name} their new temporary password.`, email: r.email, password: r.temporaryPassword });
+    const r = await api(`/studios/accounts/${a.id}/reset-password`, { method: 'POST', body: { sendInvite: true } });
+    setSecret({ title: 'Password reset', label: `${deliveryNote(r.invited, a.name)} New temporary password:`, email: r.email, password: r.temporaryPassword });
     load();
   };
   const remove = async (a) => {
@@ -72,13 +72,20 @@ export default function People({ studio, role }) {
           role={role}
           events={events}
           onClose={() => setCreating(false)}
-          onCreated={(r) => { setCreating(false); setSecret({ title: 'Account created', label: `Send ${r.account.name} their login details.`, email: r.account.email, password: r.temporaryPassword }); load(); }}
+          onCreated={(r) => { setCreating(false); setSecret({ title: 'Account created', label: `${deliveryNote(r.invited, r.account.name)} Login details:`, email: r.account.email, password: r.temporaryPassword }); load(); }}
         />
       )}
       {editing && <EditEvents account={editing} events={events} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); load(); }} />}
       {secret && <Modal title={secret.title} onClose={() => setSecret(null)}><SecretBox label={secret.label} email={secret.email} password={secret.password} /></Modal>}
     </>
   );
+}
+
+/** Says whether the login details went out by email / WhatsApp, or must be sent by hand. */
+function deliveryNote(invited, name) {
+  if (!invited) return `Send ${name} their login details yourself.`;
+  const ways = [['sent', 'logged'].includes(invited.email) && 'email', invited.whatsapp === 'sent' && 'WhatsApp'].filter(Boolean);
+  return ways.length ? `Sent to ${name} by ${ways.join(' and ')}.` : `Sending failed, so send ${name} their login details yourself.`;
 }
 
 function EventPicker({ events, value, onChange }) {
@@ -108,7 +115,7 @@ function EventPicker({ events, value, onChange }) {
 }
 
 function CreateAccount({ studio, role, events, onClose, onCreated }) {
-  const [f, setF] = useState({ name: '', email: '', phone: '', events: [] });
+  const [f, setF] = useState({ name: '', email: '', phone: '', events: [], sendInvite: true });
   const { busy, error, run } = useAsync();
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
   return (
@@ -125,6 +132,7 @@ function CreateAccount({ studio, role, events, onClose, onCreated }) {
             <EventPicker events={events} value={f.events} onChange={(v) => setF({ ...f, events: v })} />
           </div>
         )}
+        <label className="row"><input type="checkbox" checked={f.sendInvite} onChange={(e) => setF({ ...f, sendInvite: e.target.checked })} /> Send login details by email{f.phone ? ' and WhatsApp' : ''}</label>
         {error && <div className="error">{error}</div>}
         <button className="btn primary" disabled={busy}>Create account</button>
       </form>

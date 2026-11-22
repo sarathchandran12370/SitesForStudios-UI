@@ -73,6 +73,7 @@ export default function OrgHome() {
       {created && (
         <Modal title="Studio created" onClose={() => setCreated(null)}>
           <p>{created.studio.name} is ready. Its website address is <b>/s/{created.studio.slug}</b>.</p>
+          {created.invited && <p className="ok">Login details were emailed to {created.admin.email}.</p>}
           {created.admin && <SecretBox label="Login details for the studio admin:" email={created.admin.email} password={created.admin.temporaryPassword} />}
           <div className="row" style={{ marginTop: 14 }}><Link className="btn primary" to={`/studio/${created.studio.id}/website`} onClick={() => setCreated(null)}>Customize website</Link></div>
         </Modal>
@@ -82,7 +83,7 @@ export default function OrgHome() {
 }
 
 function CreateStudio({ templates, premiumAllowed, onClose, onCreated }) {
-  const [f, setF] = useState({ name: '', slug: '', templateId: 'editorial', adminName: '', adminEmail: '' });
+  const [f, setF] = useState({ name: '', slug: '', templateId: 'editorial', adminName: '', adminEmail: '', sendInvite: true });
   const { busy, error, run } = useAsync();
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
   return (
@@ -91,7 +92,7 @@ function CreateStudio({ templates, premiumAllowed, onClose, onCreated }) {
         className="stack"
         onSubmit={(e) => {
           e.preventDefault();
-          const body = { name: f.name, templateId: f.templateId, ...(f.slug && { slug: f.slug }), ...(f.adminEmail && { adminEmail: f.adminEmail, adminName: f.adminName || f.name }) };
+          const body = { name: f.name, templateId: f.templateId, ...(f.slug && { slug: f.slug }), ...(f.adminEmail && { adminEmail: f.adminEmail, adminName: f.adminName || f.name, sendInvite: f.sendInvite }) };
           run(async () => onCreated(await api('/org/studios', { method: 'POST', body })));
         }}
       >
@@ -107,6 +108,7 @@ function CreateStudio({ templates, premiumAllowed, onClose, onCreated }) {
           <label className="field">Admin name<input value={f.adminName} onChange={set('adminName')} /></label>
           <label className="field">Admin email<input type="email" value={f.adminEmail} onChange={set('adminEmail')} /></label>
         </div>
+        {f.adminEmail && <label className="row"><input type="checkbox" checked={f.sendInvite} onChange={(e) => setF({ ...f, sendInvite: e.target.checked })} /> Email the login details to the studio admin</label>}
         {error && <div className="error">{error}</div>}
         <button className="btn primary" disabled={busy}>Create studio</button>
       </form>

@@ -15,6 +15,9 @@ export function AuthProvider({ children }) {
   }, []);
   useEffect(() => {
     refresh();
+    const onBlocked = () => refresh();
+    window.addEventListener('sfs:org-blocked', onBlocked);
+    return () => window.removeEventListener('sfs:org-blocked', onBlocked);
   }, [refresh]);
 
   const login = async (email, password) => {
@@ -30,6 +33,9 @@ export function AuthProvider({ children }) {
 }
 
 export const useAuth = () => useContext(AuthCtx);
+
+/** Suspended or cancelled organizations lose access (Super Admin never does). */
+export const isOrgBlocked = (user) => !!user && user.role !== 'super_admin' && ['suspended', 'cancelled'].includes(user.org_status);
 
 export function homeFor(user) {
   if (!user) return '/login';
