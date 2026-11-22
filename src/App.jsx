@@ -13,7 +13,19 @@ import EventView from './pages/portal/EventView.jsx';
 import SiteRenderer from './site/SiteRenderer.jsx';
 
 // Hosts that serve the platform app itself. Any other host is a studio's custom domain.
-const APP_HOSTS = ['localhost', '127.0.0.1', 'app.sitesforstudios.com', 'sitesforstudios.com', 'www.sitesforstudios.com'];
+// Extra hosts come from VITE_APP_HOSTS at build time (comma-separated), set by the deploy workflow.
+const APP_HOSTS = [
+  'localhost',
+  '127.0.0.1',
+  'app.sitesforstudios.com',
+  'sitesforstudios.com',
+  'www.sitesforstudios.com',
+  ...String(import.meta.env.VITE_APP_HOSTS || '')
+    .split(',')
+    .map((h) => h.trim().toLowerCase())
+    .filter(Boolean),
+];
+const isAppHost = (host) => APP_HOSTS.includes(host) || host.endsWith('.cloudfront.net');
 
 function Protected({ roles, children }) {
   const { user } = useAuth();
@@ -29,7 +41,7 @@ const MANAGERS = ['super_admin', 'org_admin', 'studio_admin', 'staff'];
 
 export default function App() {
   const host = window.location.hostname;
-  if (!APP_HOSTS.includes(host)) {
+  if (!isAppHost(host)) {
     return (
       <Routes>
         <Route path="*" element={<SiteRenderer byHost={host} />} />
