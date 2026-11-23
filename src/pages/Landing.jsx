@@ -14,7 +14,8 @@ export default function Landing() {
         <div className="brand" style={{ color: 'var(--ink)', padding: 0 }}><i />SitesForStudios</div>
         <div className="row">
           <Link className="btn ghost" to="/s/arjun-photography">See a demo site</Link>
-          <Link className="btn primary" to="/login">Log in</Link>
+          <Link className="btn" to="/login">Log in</Link>
+          <Link className="btn primary" to="/signup">Start free trial</Link>
         </div>
       </header>
       <section style={{ maxWidth: 1140, margin: '0 auto', padding: '64px 24px 40px', display: 'grid', gap: 24, gridTemplateColumns: 'repeat(auto-fit,minmax(320px,1fr))', alignItems: 'center' }}>
@@ -25,7 +26,7 @@ export default function Landing() {
             Pick a premium template, take enquiries, and deliver full-resolution and RAW photos to couples. Guests find themselves with face search.
           </p>
           <div className="row" style={{ marginTop: 20 }}>
-            <a className="btn accent" href="mailto:hello@sitesforstudios.com">Book a demo</a>
+            <Link className="btn accent" to="/signup">Start your 14-day free trial</Link>
             <Link className="btn" to="/s/arjun-photography">View demo studio</Link>
           </div>
         </div>

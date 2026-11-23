@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth, homeFor } from '../auth.jsx';
 
 export default function Login() {
@@ -38,6 +38,7 @@ export default function Login() {
         {error && <div className="error">{error}</div>}
         <button className="btn primary" disabled={busy} style={{ justifyContent: 'center' }}>{busy ? 'Logging in…' : 'Log in'}</button>
         <p className="small muted" style={{ margin: 0 }}>Forgot your password? Ask your photographer to reset it for you. Accounts are created by your studio.</p>
+        <p className="small muted" style={{ margin: 0 }}>Photographer or studio? <Link to="/signup">Start a free trial</Link></p>
       </form>
     </div>
   );

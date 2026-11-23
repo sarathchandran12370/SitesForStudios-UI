@@ -6,6 +6,8 @@ import WebsiteEditor from './WebsiteEditor.jsx';
 import People from './People.jsx';
 import Enquiries from './Enquiries.jsx';
 import DomainSettings from './DomainSettings.jsx';
+import ChecklistCard from '../../components/ChecklistCard.jsx';
+import { useReloadOnChange } from '../../hooks.js';
 
 const TABS = [
   ['events', 'Events'],
@@ -20,11 +22,17 @@ export default function StudioHome() {
   const { studioId, tab = 'events' } = useParams();
   const [studio, setStudio] = useState(null);
   const [error, setError] = useState('');
+  const [checklist, setChecklist] = useState(null);
   const load = () => api(`/studios/${studioId}`).then(setStudio).catch((e) => setError(e.message));
   useEffect(() => {
     setStudio(null);
     load();
   }, [studioId]);
+  const loadChecklist = () => api(`/studios/${studioId}/onboarding`).then(setChecklist).catch(() => {});
+  useEffect(() => {
+    loadChecklist();
+  }, [studioId, tab]);
+  useReloadOnChange(loadChecklist, [studioId]);
   if (error) return <p className="error">{error}</p>;
   if (!studio) return <p className="muted">Loading…</p>;
   return (
@@ -38,6 +46,7 @@ export default function StudioHome() {
         </div>
         <Link className="btn" to={`/s/${studio.slug}`} target="_blank">View website ↗</Link>
       </div>
+      <ChecklistCard checklist={checklist} storageKey={`sfs-studio-checklist-${studioId}`} />
       <nav className="tabs">
         {TABS.map(([id, label]) => (
           <NavLink key={id} to={`/studio/${studioId}/${id}`} className={() => (tab === id ? 'active' : '')}>{label}</NavLink>

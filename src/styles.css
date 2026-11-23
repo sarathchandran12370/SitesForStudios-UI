@@ -154,3 +154,5 @@ textarea { min-height: 90px; resize: vertical; }
   .masonry { columns: 2 140px; column-gap: 6px; }
   .lightbox .stage { padding: 0 8px 16px; }
 }
+
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

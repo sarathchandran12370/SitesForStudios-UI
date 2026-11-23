@@ -9,8 +9,10 @@ export function AuthProvider({ children }) {
     try {
       const { user } = await api('/auth/me');
       setUser(user);
+      return user;
     } catch {
       setUser(null);
+      return null;
     }
   }, []);
   useEffect(() => {
@@ -44,7 +46,8 @@ export function homeFor(user) {
     case 'super_admin':
       return '/admin';
     case 'org_admin':
-      return '/org';
+      // One-studio organizations only see their Studio dashboard until they move to a multi-studio plan.
+      return user.org_mode === 'single' && user.home_studio_id ? `/studio/${user.home_studio_id}` : '/org';
     case 'studio_admin':
     case 'staff':
       return `/studio/${user.studio_id}`;

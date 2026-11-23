@@ -1,10 +1,21 @@
 import { useEffect, useState } from 'react';
-import { Link, useOutletContext } from 'react-router-dom';
+import { Link, Navigate, useOutletContext } from 'react-router-dom';
+import { useAuth } from '../../auth.jsx';
+import ChecklistCard from '../../components/ChecklistCard.jsx';
+import { useReloadOnChange } from '../../hooks.js';
 import { api, fmtBytes, inr } from '../../api.js';
 import { Modal, SecretBox, StatusBadge, useAsync } from '../../components/ui.jsx';
 
 export default function OrgHome() {
+  const { user } = useAuth();
+  if (user.role === 'org_admin' && user.org_mode === 'single' && user.home_studio_id) return <Navigate to={`/studio/${user.home_studio_id}`} replace />;
+  return <OrgDashboard />;
+}
+
+function OrgDashboard() {
   const { reloadStudios } = useOutletContext();
+  const [checklist, setChecklist] = useState(null);
+  const [renaming, setRenaming] = useState(false);
   const [org, setOrg] = useState(null);
   const [studios, setStudios] = useState([]);
   const [templates, setTemplates] = useState([]);
@@ -17,7 +28,9 @@ export default function OrgHome() {
   useEffect(() => {
     load();
     api('/studios/templates').then(setTemplates);
+    api('/org/onboarding').then(setChecklist).catch(() => {});
   }, []);
+  useReloadOnChange(() => api('/org/onboarding').then(setChecklist).catch(() => {}));
   if (!org) return <p className="muted">Loading…</p>;
   const usedPct = Math.min(100, (org.usage.storage_bytes / (org.plan.storage_gb * 1024 ** 3)) * 100);
 
@@ -25,13 +38,21 @@ export default function OrgHome() {
     <>
       <div className="page-head">
         <div>
-          <h1>{org.name}</h1>
+          <h1>
+            {org.name}{' '}
+            <button className="btn ghost sm" onClick={() => setRenaming(true)} aria-label="Rename organization">Rename</button>
+          </h1>
           <p className="muted" style={{ margin: 0 }}>
             {org.plan.name} plan · {inr(org.plan.price_monthly_inr)}/month · <StatusBadge value={org.status} />
           </p>
         </div>
-        <button className="btn primary" onClick={() => setCreating(true)} disabled={studios.length >= org.plan.max_studios}>New studio</button>
+        <div className="row">
+          <Link className="btn" to="/org/billing">Plan &amp; billing</Link>
+          <button className="btn primary" onClick={() => setCreating(true)} disabled={studios.length >= org.plan.max_studios}>New studio</button>
+        </div>
       </div>
+      <ChecklistCard title="Set up your organization" checklist={checklist} storageKey={`sfs-org-checklist-${org.id}`} />
+      {renaming && <RenameOrg org={org} onClose={() => setRenaming(false)} onSaved={() => { setRenaming(false); load(); }} />}
       <div className="grid2" style={{ marginBottom: 16 }}>
         <div className="card stat">
           <span className="muted small">Storage used</span>
@@ -79,6 +100,20 @@ export default function OrgHome() {
         </Modal>
       )}
     </>
+  );
+}
+
+function RenameOrg({ org, onClose, onSaved }) {
+  const [name, setName] = useState(org.name);
+  const { busy, error, run } = useAsync();
+  return (
+    <Modal title="Rename organization" onClose={onClose}>
+      <form className="stack" onSubmit={(e) => { e.preventDefault(); run(async () => { await api('/org/me', { method: 'PATCH', body: { name } }); onSaved(); }); }}>
+        <label className="field">Organization name<input value={name} onChange={(e) => setName(e.target.value)} required minLength={2} /></label>
+        {error && <div className="error">{error}</div>}
+        <button className="btn primary" disabled={busy}>Save</button>
+      </form>
+    </Modal>
   );
 }
 

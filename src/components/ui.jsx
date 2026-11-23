@@ -50,6 +50,6 @@ export function useAsync() {
 }
 
 export function StatusBadge({ value }) {
-  const tone = { sent: 'good', logged: 'accent', skipped: '', archived: 'warn', restoring: 'warn', active: 'good', live: 'good', verified: 'good', booked: 'good', ready: 'good', trial: 'accent', new: 'accent', pending: 'warn', past_due: 'warn', contacted: 'warn', quoted: 'warn', suspended: 'bad', failed: 'bad', lost: 'bad', cancelled: 'bad' }[value] || '';
+  const tone = { expired: 'bad', paid: 'good', void: 'bad', sent: 'good', logged: 'accent', skipped: '', archived: 'warn', restoring: 'warn', active: 'good', live: 'good', verified: 'good', booked: 'good', ready: 'good', trial: 'accent', new: 'accent', pending: 'warn', past_due: 'warn', contacted: 'warn', quoted: 'warn', suspended: 'bad', failed: 'bad', lost: 'bad', cancelled: 'bad' }[value] || '';
   return <span className={`badge ${tone}`}>{String(value).replace('_', ' ')}</span>;
 }

@@ -3,11 +3,13 @@ import { useAuth, homeFor, isOrgBlocked } from './auth.jsx';
 import AccountBlocked from './components/AccountBlocked.jsx';
 import { isAppHost } from './hosts.js';
 import Login from './pages/Login.jsx';
+import Signup from './pages/Signup.jsx';
 import ChangePassword from './pages/ChangePassword.jsx';
 import Landing from './pages/Landing.jsx';
 import AppShell from './components/AppShell.jsx';
 import SuperAdmin from './pages/superadmin/SuperAdmin.jsx';
 import OrgHome from './pages/org/OrgHome.jsx';
+import Billing from './pages/org/Billing.jsx';
 import StudioHome from './pages/studio/StudioHome.jsx';
 import EventManage from './pages/studio/EventManage.jsx';
 import MyEvents from './pages/portal/MyEvents.jsx';
@@ -43,10 +45,12 @@ export default function App() {
       <Route path="/" element={<Landing />} />
       <Route path="/s/:slug" element={<SiteRenderer />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
       <Route path="/change-password" element={<Protected><ChangePassword /></Protected>} />
       <Route element={<Protected roles={MANAGERS}><AppShell /></Protected>}>
         <Route path="/admin" element={<Protected roles={['super_admin']}><SuperAdmin /></Protected>} />
         <Route path="/org" element={<Protected roles={['org_admin', 'super_admin']}><OrgHome /></Protected>} />
+        <Route path="/org/billing" element={<Protected roles={['org_admin']}><Billing /></Protected>} />
         <Route path="/studio/:studioId" element={<StudioHome />} />
         <Route path="/studio/:studioId/:tab" element={<StudioHome />} />
         <Route path="/events/:eventId" element={<EventManage />} />

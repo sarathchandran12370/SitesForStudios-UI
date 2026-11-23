@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { api, fmtBytes, inr } from '../../api.js';
 import { Modal, SecretBox, StatusBadge, useAsync } from '../../components/ui.jsx';
 
-const ORG_STATUSES = ['trial', 'active', 'past_due', 'suspended', 'cancelled'];
+const ORG_STATUSES = ['trial', 'active', 'past_due', 'expired', 'suspended', 'cancelled'];
 const fmtStorage = (gb) => (gb >= 1024 ? `${(gb / 1024).toFixed(gb % 1024 ? 1 : 0)} TB` : `${gb} GB`);
 
 export default function SuperAdmin() {
@@ -10,6 +10,7 @@ export default function SuperAdmin() {
   const [orgs, setOrgs] = useState([]);
   const [plans, setPlans] = useState([]);
   const [messages, setMessages] = useState([]);
+  const [invoices, setInvoices] = useState([]);
   const [creating, setCreating] = useState(false);
   const [created, setCreated] = useState(null);
   const [editingPlan, setEditingPlan] = useState(null);
@@ -18,6 +19,7 @@ export default function SuperAdmin() {
     api('/admin/orgs').then(setOrgs);
     api('/admin/plans').then(setPlans);
     api('/admin/notifications').then(setMessages).catch(() => {});
+    api('/admin/invoices').then(setInvoices).catch(() => {});
   };
   useEffect(load, []);
 
@@ -27,6 +29,12 @@ export default function SuperAdmin() {
       if (!confirm(`${what} ${org.name}? Its dashboards, client galleries and websites go offline until you change the status back.`)) return load();
     }
     await api(`/admin/orgs/${org.id}`, { method: 'PATCH', body: patch });
+    load();
+  };
+
+  const extend = async (org) => {
+    if (!confirm(`Give ${org.name} 14 more days of trial?`)) return;
+    await api(`/admin/orgs/${org.id}`, { method: 'PATCH', body: { extendTrialDays: 14 } });
     load();
   };
 
@@ -53,7 +61,7 @@ export default function SuperAdmin() {
         <h3>Organizations</h3>
         <div className="table-wrap">
           <table className="table">
-            <thead><tr><th>Name</th><th>Owner</th><th>Plan</th><th>Status</th><th>Studios</th><th>Storage</th></tr></thead>
+            <thead><tr><th>Name</th><th>Owner</th><th>Plan</th><th>Status</th><th>Trial ends</th><th>Studios</th><th>Storage</th></tr></thead>
             <tbody>
               {orgs.map((o) => (
                 <tr key={o.id}>
@@ -68,6 +76,15 @@ export default function SuperAdmin() {
                     <select aria-label={`Status for ${o.name}`} value={o.status} onChange={(e) => update(o, { status: e.target.value })} style={{ width: 'auto' }}>
                       {ORG_STATUSES.map((s) => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
                     </select>
+                  </td>
+                  <td className="small">
+                    {['trial', 'expired', 'suspended'].includes(o.status) && o.trial_ends_at ? (
+                      <>
+                        {new Date(o.trial_ends_at).toLocaleDateString('en-IN', { dateStyle: 'medium' })}
+                        <div><button className="btn ghost sm" onClick={() => extend(o)}>+14 days</button></div>
+                      </>
+                    ) : '—'}
+                    {o.signup_source === 'self' && <div><span className="badge">self sign-up</span></div>}
                   </td>
                   <td>{o.studio_count}</td>
                   <td>{fmtBytes(o.storage_bytes)}</td>
@@ -93,6 +110,28 @@ export default function SuperAdmin() {
                   <td><button className="btn sm" onClick={() => setEditingPlan(p)}>Edit</button></td>
                 </tr>
               ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="card">
+        <h3>Invoices</h3>
+        <div className="table-wrap">
+          <table className="table">
+            <thead><tr><th>Invoice</th><th>Organization</th><th>Date</th><th>Amount</th><th>Status</th><th /></tr></thead>
+            <tbody>
+              {invoices.slice(0, 30).map((i) => (
+                <tr key={i.id}>
+                  <td><b>{i.number}</b></td>
+                  <td>{i.org_name}</td>
+                  <td className="small">{new Date(i.issued_at).toLocaleDateString('en-IN', { dateStyle: 'medium' })}</td>
+                  <td>₹{(i.total_paise / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                  <td><StatusBadge value={i.status} /></td>
+                  <td><a className="btn sm" href={`/api/billing/invoices/${i.id}/document`} target="_blank" rel="noreferrer">View</a></td>
+                </tr>
+              ))}
+              {!invoices.length && <tr><td colSpan={6} className="muted">No invoices yet.</td></tr>}
             </tbody>
           </table>
         </div>
@@ -149,11 +188,11 @@ const NUMBER_FIELDS = [
 ];
 
 export function PlanEditor({ plan, onClose, onSaved }) {
-  const [f, setF] = useState({ ...plan, razorpay_plan_id: plan.razorpay_plan_id || '' });
+  const [f, setF] = useState({ ...plan, razorpay_plan_id: plan.razorpay_plan_id || '', razorpay_plan_id_yearly: plan.razorpay_plan_id_yearly || '' });
   const { busy, error, run } = useAsync();
   const submit = (e) => {
     e.preventDefault();
-    const body = { name: f.name, raw_delivery: !!f.raw_delivery, premium_templates: !!f.premium_templates, razorpay_plan_id: f.razorpay_plan_id.trim() || null };
+    const body = { name: f.name, raw_delivery: !!f.raw_delivery, premium_templates: !!f.premium_templates, razorpay_plan_id: f.razorpay_plan_id.trim() || null, razorpay_plan_id_yearly: f.razorpay_plan_id_yearly.trim() || null };
     for (const [k] of NUMBER_FIELDS) body[k] = Number(f[k]);
     run(async () => {
       await api(`/admin/plans/${plan.id}`, { method: 'PUT', body });
@@ -173,7 +212,11 @@ export function PlanEditor({ plan, onClose, onSaved }) {
         </div>
         <label className="row"><input type="checkbox" checked={!!f.raw_delivery} onChange={(e) => setF({ ...f, raw_delivery: e.target.checked })} /> RAW delivery</label>
         <label className="row"><input type="checkbox" checked={!!f.premium_templates} onChange={(e) => setF({ ...f, premium_templates: e.target.checked })} /> Premium templates</label>
-        <label className="field">Razorpay plan ID (optional)<input placeholder="plan_XXXXXXXX" value={f.razorpay_plan_id} onChange={(e) => setF({ ...f, razorpay_plan_id: e.target.value })} /></label>
+        <div className="grid2">
+          <label className="field">Razorpay plan ID, monthly<input placeholder="plan_XXXXXXXX" value={f.razorpay_plan_id} onChange={(e) => setF({ ...f, razorpay_plan_id: e.target.value })} /></label>
+          <label className="field">Razorpay plan ID, yearly<input placeholder="plan_YYYYYYYY" value={f.razorpay_plan_id_yearly} onChange={(e) => setF({ ...f, razorpay_plan_id_yearly: e.target.value })} /></label>
+        </div>
+        <p className="small muted" style={{ margin: 0 }}>Create these plans in the Razorpay dashboard with the price <b>including GST</b> (e.g. ₹3,499 + 18% = ₹4,128.82). Without a plan ID, that plan can't be bought online.</p>
         <p className="small muted" style={{ margin: 0 }}>Limits apply to every organization on this plan right away. Lowering storage or studios does not delete anything; it only blocks new uploads and studios above the limit.</p>
         {error && <div className="error">{error}</div>}
         <button className="btn primary" disabled={busy}>Save plan</button>
