@@ -6,6 +6,7 @@ export const APP_HOSTS = [
   'app.sitesforstudios.com',
   'sitesforstudios.com',
   'www.sitesforstudios.com',
+  'app.thaaram.in', // test environment
   ...String(import.meta.env.VITE_APP_HOSTS || '')
     .split(',')
     .map((h) => h.trim().toLowerCase())

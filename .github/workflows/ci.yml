@@ -1,4 +1,4 @@
-name: UI CI
+name: UI CI / Deploy
 
 on:
   push:
@@ -10,8 +10,12 @@ permissions:
   contents: read
 
 concurrency:
-  group: ui-ci-${{ github.ref }}
+  group: ui-${{ github.ref }}
   cancel-in-progress: true
+
+env:
+  # Hostnames that serve the platform app (any other host is treated as a studio's own domain).
+  VITE_APP_HOSTS: ${{ vars.APP_HOSTS || 'app.thaaram.in' }}
 
 jobs:
   build:
@@ -27,5 +31,38 @@ jobs:
         run: npm test
       - name: Build
         run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+          retention-days: 7
+
+  # Uploads the web app to S3 and refreshes CloudFront. Skipped until the repository variables are set
+  # (Settings -> Secrets and variables -> Actions -> Variables): AWS_DEPLOY_ROLE_ARN, UI_BUCKET,
+  # CLOUDFRONT_DISTRIBUTION_ID, optional APP_HOSTS and AWS_REGION. Uses GitHub OIDC, no stored AWS keys.
+  deploy:
+    needs: build
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && vars.AWS_DEPLOY_ROLE_ARN != ''
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION || 'ap-south-1' }}
+      - name: Upload to S3
         env:
-          VITE_APP_HOSTS: api.thaaram.in
+          BUCKET: ${{ vars.UI_BUCKET }}
+        run: |
+          # Hashed assets never change: cache for a year. Everything else (index.html) must be revalidated.
+          aws s3 sync dist/assets "s3://$BUCKET/assets" --delete --cache-control "public,max-age=31536000,immutable"
+          aws s3 sync dist "s3://$BUCKET" --delete --exclude "assets/*" --cache-control "no-cache"
+      - name: Refresh CloudFront
+        run: aws cloudfront create-invalidation --distribution-id "${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}" --paths "/index.html" "/"
