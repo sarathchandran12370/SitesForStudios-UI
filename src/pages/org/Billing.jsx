@@ -135,10 +135,11 @@ export default function Billing() {
               <ul className="small" style={{ margin: 0, paddingLeft: 18, lineHeight: 1.8 }}>
                 <li>{storage(p.storage_gb)} storage</li>
                 <li>{p.max_studios} studio{p.max_studios > 1 ? 's' : ''}, {p.staff_seats} staff seat{p.staff_seats > 1 ? 's' : ''}</li>
-                <li>Face recognition on {p.face_events_per_month} events a month</li>
-                <li>{p.raw_delivery ? 'RAW delivery' : 'No RAW delivery'}</li>
+                <li>{p.client_galleries === false ? 'Website, enquiries and portfolio only (no client galleries)' : 'Client galleries and full-resolution downloads'}</li>
+                {p.client_galleries !== false && <li>Face recognition on {p.face_events_per_month} events a month</li>}
+                {p.client_galleries !== false && <li>{p.raw_delivery ? 'RAW delivery' : 'No RAW delivery'}</li>}
                 <li>{p.premium_templates ? 'All templates incl. premium' : 'Standard templates'}</li>
-                <li>Galleries online {p.retention_months} months</li>
+                {p.client_galleries !== false && <li>Galleries online {p.retention_months} months</li>}
               </ul>
               <button className={`btn ${isCurrent ? '' : 'primary'}`} disabled={isCurrent || !payable || busy || org.cancelAtPeriodEnd} onClick={() => choose(p)} style={{ justifyContent: 'center' }}>
                 {busy ? 'Please wait…' : label}

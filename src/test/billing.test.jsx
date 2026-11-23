@@ -113,3 +113,24 @@ describe('BillingDetails', () => {
     expect(calls.find((c) => c.key === 'PUT /api/billing/profile').body).toMatchObject({ gstin: '32AABCS1234A1Z5', stateCode: '32' });
   });
 });
+
+describe('Website plan in the UI', () => {
+  it('billing shows the Website plan as website-only', async () => {
+    const s = summary();
+    s.plans.unshift(plan('website', 'Website', 999, 9990, { client_galleries: false, storage_gb: 10, face_events_per_month: 0 }));
+    mockApi({ 'GET /api/billing/summary': [200, s], 'GET /api/billing/config': [200, { states }] });
+    page();
+    expect(await screen.findByText('Website')).toBeInTheDocument();
+    expect(screen.getByText('+ 18% GST = ₹1,178.82')).toBeInTheDocument();
+    expect(screen.getByText(/Website, enquiries and portfolio only/)).toBeInTheDocument();
+  });
+
+  it('the Clients tab shows an upgrade prompt on the Website plan', async () => {
+    const { default: People } = await import('../pages/studio/People.jsx');
+    const { AuthProvider } = await import('../auth.jsx');
+    mockApi({ 'GET /api/auth/me': [200, { user: { role: 'org_admin', name: 'Nila' } }] });
+    render(<MemoryRouter><AuthProvider><People studio={{ id: 's1', plan: { client_galleries: false, staff_seats: 1 } }} role="client" /></AuthProvider></MemoryRouter>);
+    expect(await screen.findByText('Client galleries are not in your plan')).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: 'See plans and upgrade' })).toHaveAttribute('href', '/org/billing');
+  });
+});

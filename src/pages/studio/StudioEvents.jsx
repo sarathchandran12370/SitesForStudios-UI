@@ -13,8 +13,12 @@ export default function StudioEvents({ studio }) {
   return (
     <>
       <div className="row between" style={{ marginBottom: 14 }}>
-        <p className="muted" style={{ margin: 0 }}>{events.length} events</p>
-        <button className="btn primary" onClick={() => setCreating(true)}>New event</button>
+        <p className="muted" style={{ margin: 0 }}>
+          {studio.plan?.client_galleries === false
+            ? `${events.length} portfolio album${events.length === 1 ? '' : 's'}. Highlights from albums marked "Portfolio" appear on your website.`
+            : `${events.length} events`}
+        </p>
+        <button className="btn primary" onClick={() => setCreating(true)}>{studio.plan?.client_galleries === false ? 'New album' : 'New event'}</button>
       </div>
       <div className="card">
         <div className="table-wrap">
@@ -54,8 +58,9 @@ export function EventForm({ studio, event, onClose, onSaved }) {
     venue: event?.venue || '',
     rawEnabled: event?.raw_enabled || false,
     faceEnabled: event?.face_enabled ?? true,
-    showInPortfolio: event?.show_in_portfolio || false,
+    showInPortfolio: event?.show_in_portfolio ?? studio.plan?.client_galleries === false,
   });
+  const galleries = studio.plan?.client_galleries !== false;
   const { busy, error, run } = useAsync();
   const set = (k) => (e) => setF({ ...f, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value });
   const submit = (e) => {
@@ -64,18 +69,22 @@ export function EventForm({ studio, event, onClose, onSaved }) {
     run(async () => onSaved(event ? await api(`/events/${event.id}`, { method: 'PATCH', body }) : await api(`/events/studio/${studio.id}`, { method: 'POST', body })));
   };
   return (
-    <Modal title={event ? 'Event settings' : 'New event'} onClose={onClose}>
+    <Modal title={event ? (galleries ? 'Event settings' : 'Album settings') : galleries ? 'New event' : 'New portfolio album'} onClose={onClose}>
       <form className="stack" onSubmit={submit}>
         <label className="field">Title<input placeholder="Anjali & Rahul" value={f.title} onChange={set('title')} required /></label>
         <div className="grid2">
           <label className="field">Date<input type="date" value={f.eventDate} onChange={set('eventDate')} /></label>
           <label className="field">Venue<input value={f.venue} onChange={set('venue')} /></label>
         </div>
-        <label className="row"><input type="checkbox" checked={f.rawEnabled} onChange={set('rawEnabled')} disabled={!studio.plan.raw_delivery} /> Deliver RAW files to the couple {!studio.plan.raw_delivery && <span className="small muted">(Pro plan)</span>}</label>
-        <label className="row"><input type="checkbox" checked={f.faceEnabled} onChange={set('faceEnabled')} /> Face recognition (People tab and Find me)</label>
+        {galleries && (
+          <>
+            <label className="row"><input type="checkbox" checked={f.rawEnabled} onChange={set('rawEnabled')} disabled={!studio.plan.raw_delivery} /> Deliver RAW files to the couple {!studio.plan.raw_delivery && <span className="small muted">(Pro plan)</span>}</label>
+            <label className="row"><input type="checkbox" checked={f.faceEnabled} onChange={set('faceEnabled')} /> Face recognition (People tab and Find me)</label>
+          </>
+        )}
         <label className="row"><input type="checkbox" checked={f.showInPortfolio} onChange={set('showInPortfolio')} /> Show highlights in the website portfolio</label>
         {error && <div className="error">{error}</div>}
-        <button className="btn primary" disabled={busy}>{event ? 'Save' : 'Create event'}</button>
+        <button className="btn primary" disabled={busy}>{event ? 'Save' : galleries ? 'Create event' : 'Create album'}</button>
       </form>
     </Modal>
   );

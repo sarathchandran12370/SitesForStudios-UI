@@ -100,13 +100,13 @@ export default function SuperAdmin() {
         <h3>Plans</h3>
         <div className="table-wrap">
           <table className="table">
-            <thead><tr><th>Plan</th><th>Monthly</th><th>Yearly</th><th>Storage</th><th>Studios</th><th>Face events / mo</th><th>Staff</th><th>RAW</th><th>Premium templates</th><th>Retention</th><th /></tr></thead>
+            <thead><tr><th>Plan</th><th>Monthly</th><th>Yearly</th><th>Storage</th><th>Studios</th><th>Face events / mo</th><th>Staff</th><th>Galleries</th><th>RAW</th><th>Premium templates</th><th>Retention</th><th /></tr></thead>
             <tbody>
               {plans.map((p) => (
                 <tr key={p.id}>
                   <td><b>{p.name}</b></td><td>{inr(p.price_monthly_inr)}</td><td>{inr(p.price_yearly_inr)}</td>
                   <td>{fmtStorage(p.storage_gb)}</td><td>{p.max_studios}</td><td>{p.face_events_per_month}</td><td>{p.staff_seats}</td>
-                  <td>{p.raw_delivery ? 'Yes' : '—'}</td><td>{p.premium_templates ? 'Yes' : '—'}</td><td>{p.retention_months} months</td>
+                  <td>{p.client_galleries === false ? 'Website only' : 'Yes'}</td><td>{p.raw_delivery ? 'Yes' : '—'}</td><td>{p.premium_templates ? 'Yes' : '—'}</td><td>{p.retention_months} months</td>
                   <td><button className="btn sm" onClick={() => setEditingPlan(p)}>Edit</button></td>
                 </tr>
               ))}
@@ -192,7 +192,7 @@ export function PlanEditor({ plan, onClose, onSaved }) {
   const { busy, error, run } = useAsync();
   const submit = (e) => {
     e.preventDefault();
-    const body = { name: f.name, raw_delivery: !!f.raw_delivery, premium_templates: !!f.premium_templates, razorpay_plan_id: f.razorpay_plan_id.trim() || null, razorpay_plan_id_yearly: f.razorpay_plan_id_yearly.trim() || null };
+    const body = { name: f.name, client_galleries: f.client_galleries !== false, raw_delivery: !!f.raw_delivery, premium_templates: !!f.premium_templates, razorpay_plan_id: f.razorpay_plan_id.trim() || null, razorpay_plan_id_yearly: f.razorpay_plan_id_yearly.trim() || null };
     for (const [k] of NUMBER_FIELDS) body[k] = Number(f[k]);
     run(async () => {
       await api(`/admin/plans/${plan.id}`, { method: 'PUT', body });
@@ -210,6 +210,7 @@ export function PlanEditor({ plan, onClose, onSaved }) {
             </label>
           ))}
         </div>
+        <label className="row"><input type="checkbox" checked={f.client_galleries !== false} onChange={(e) => setF({ ...f, client_galleries: e.target.checked })} /> Client galleries (client logins, downloads, face search). Off = website-only plan</label>
         <label className="row"><input type="checkbox" checked={!!f.raw_delivery} onChange={(e) => setF({ ...f, raw_delivery: e.target.checked })} /> RAW delivery</label>
         <label className="row"><input type="checkbox" checked={!!f.premium_templates} onChange={(e) => setF({ ...f, premium_templates: e.target.checked })} /> Premium templates</label>
         <div className="grid2">

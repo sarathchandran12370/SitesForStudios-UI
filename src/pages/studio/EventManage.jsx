@@ -64,10 +64,16 @@ export default function EventManage() {
         </div>
         <div className="row">
           <button className="btn" onClick={() => setEditing(true)}>Settings</button>
-          <Link className="btn" to={`/portal/events/${event.id}`}>Client view</Link>
+          {studio.plan?.client_galleries !== false && <Link className="btn" to={`/portal/events/${event.id}`}>Client view</Link>}
         </div>
       </div>
 
+      {studio.plan?.client_galleries === false ? (
+        <div className="card small muted">
+          Portfolio album: photos you mark as <b>Highlight</b> appear in your website portfolio when the album is set to show in the portfolio.
+          Client galleries and downloads come with Starter and above.
+        </div>
+      ) : (
       <div className="card stack">
         <div className="row between">
           <h3 style={{ margin: 0 }}>Clients with access</h3>
@@ -79,6 +85,7 @@ export default function EventManage() {
         </div>
         {event.clients.length > 0 && event.status === 'active' && <NotifyClients event={event} onDone={loadEvent} />}
       </div>
+      )}
 
       {event.status !== 'active' && <ArchiveNotice event={event} onChanged={loadEvent} />}
       {event.status === 'active' && <Uploader event={event} onDone={(n) => { setMessage(`${n} file(s) uploaded. Processing…`); loadPhotos(); loadEvent(); }} />}

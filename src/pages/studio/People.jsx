@@ -1,9 +1,15 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../api.js';
 import { Modal, SecretBox, useAsync } from '../../components/ui.jsx';
+import UpgradePrompt from '../../components/UpgradePrompt.jsx';
 
 // Clients (couples, family) and team members (staff). Only the studio creates accounts.
 export default function People({ studio, role }) {
+  if (role === 'client' && studio.plan?.client_galleries === false) return <UpgradePrompt />;
+  return <PeopleList studio={studio} role={role} />;
+}
+
+function PeopleList({ studio, role }) {
   const [rows, setRows] = useState([]);
   const [events, setEvents] = useState([]);
   const [creating, setCreating] = useState(false);
