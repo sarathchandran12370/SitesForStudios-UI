@@ -50,12 +50,14 @@ describe('Signup', () => {
     await userEvent.type(screen.getByLabelText('Email'), 'meera@test.in');
     await userEvent.type(screen.getByLabelText('Password'), 'Strong!pass1');
     expect(screen.getByRole('button', { name: /Pro · ₹6,999/ })).toHaveClass('active');
+    expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled();
+    await userEvent.click(screen.getByRole('checkbox'));
     await userEvent.click(screen.getByRole('button', { name: 'Continue' }));
 
     expect(await screen.findByText('Check your email')).toBeInTheDocument();
     expect(screen.getByText(/Development mode: your code is/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Resend code in/ })).toBeDisabled();
-    expect(calls.find((c) => c.key === 'POST /api/signup/start').body).toMatchObject({ type: 'studio', studioName: 'Lens & Light', planId: 'pro' });
+    expect(calls.find((c) => c.key === 'POST /api/signup/start').body).toMatchObject({ type: 'studio', studioName: 'Lens & Light', planId: 'pro', acceptTerms: true });
 
     await userEvent.type(screen.getByLabelText('6-digit code'), '12a3456');
     expect(screen.getByLabelText('6-digit code')).toHaveValue('123456');
@@ -78,6 +80,7 @@ describe('Signup', () => {
     await userEvent.type(screen.getByLabelText('Email'), 'ravi@test.in');
     await userEvent.type(screen.getByLabelText('Password'), 'Strong!pass1');
     expect(screen.getByText(/Organization plan · ₹14,999\/month after the trial/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('checkbox'));
     await userEvent.click(screen.getByRole('button', { name: 'Continue' }));
     expect(await screen.findByText(/already exists/)).toBeInTheDocument();
     expect(calls.find((c) => c.key === 'POST /api/signup/start').body).toMatchObject({ type: 'organization', orgName: 'Big Day Group', planId: 'organization' });
@@ -165,5 +168,37 @@ describe('api() change notifications', () => {
     await api('/bad', { method: 'POST', body: {} }).catch(() => {});
     window.removeEventListener('sfs:changed', seen);
     expect(seen).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('Terms acceptance', () => {
+  it('asks anyone who has not accepted the current terms, then lets them in', async () => {
+    const { default: AcceptTerms } = await import('../components/AcceptTerms.jsx');
+    let accepted = false;
+    const calls = mockApi({
+      'GET /api/auth/me': () => [200, { user: { role: 'client', name: 'Anu', terms_version: accepted ? '2026-11-23' : null, terms_current_version: '2026-11-23' } }],
+      'POST /api/auth/accept-terms': () => { accepted = true; return [200, { ok: true }]; },
+    });
+    render(<MemoryRouter><AuthProvider><AcceptTerms /></AuthProvider></MemoryRouter>);
+    expect(await screen.findByText('Before you continue')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Privacy Policy' })).toHaveAttribute('href', '/privacy');
+    const accept = screen.getByRole('button', { name: 'Accept and continue' });
+    expect(accept).toBeDisabled();
+    await userEvent.click(screen.getByRole('checkbox'));
+    await userEvent.click(accept);
+    await new Promise((r) => setTimeout(r, 20));
+    expect(calls.find((c) => c.key === 'POST /api/auth/accept-terms').body).toEqual({ version: '2026-11-23' });
+  });
+
+  it('renders the Terms and Privacy pages with the version', async () => {
+    const { default: Terms } = await import('../pages/legal/Terms.jsx');
+    const { default: Privacy } = await import('../pages/legal/Privacy.jsx');
+    const { within } = await import('@testing-library/react');
+    const terms = render(<MemoryRouter><Terms /></MemoryRouter>);
+    expect(within(terms.container).getByRole('heading', { name: 'Terms of Service' })).toBeInTheDocument();
+    expect(within(terms.container).getByText(/Version 2026-11-23/)).toBeInTheDocument();
+    const privacy = render(<MemoryRouter><Privacy /></MemoryRouter>);
+    expect(within(privacy.container).getByRole('heading', { name: 'Privacy Policy' })).toBeInTheDocument();
+    expect(within(privacy.container).getByRole('heading', { name: /Face recognition/ })).toBeInTheDocument();
   });
 });

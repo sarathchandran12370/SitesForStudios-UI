@@ -156,3 +156,6 @@ textarea { min-height: 90px; resize: vertical; }
 }
 
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.legal h2 { font-size: 24px; margin: 32px 0 8px; }
+.legal ul { padding-left: 20px; }
+.legal li { margin-bottom: 4px; }

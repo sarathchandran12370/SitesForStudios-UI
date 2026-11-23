@@ -49,6 +49,10 @@ export default function Landing() {
           ))}
         </div>
       </section>
+      <footer style={{ maxWidth: 1140, margin: '0 auto', padding: '24px', borderTop: '1px solid var(--line)' }} className="row between small muted">
+        <span>© {new Date().getFullYear()} SitesForStudios</span>
+        <span><Link to="/terms">Terms of Service</Link> · <Link to="/privacy">Privacy Policy</Link></span>
+      </footer>
     </div>
   );
 }

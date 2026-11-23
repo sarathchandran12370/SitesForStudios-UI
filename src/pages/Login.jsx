@@ -39,6 +39,7 @@ export default function Login() {
         <button className="btn primary" disabled={busy} style={{ justifyContent: 'center' }}>{busy ? 'Logging in…' : 'Log in'}</button>
         <p className="small muted" style={{ margin: 0 }}>Forgot your password? Ask your photographer to reset it for you. Accounts are created by your studio.</p>
         <p className="small muted" style={{ margin: 0 }}>Photographer or studio? <Link to="/signup">Start a free trial</Link></p>
+        <p className="small muted" style={{ margin: 0 }}><Link to="/terms">Terms</Link> · <Link to="/privacy">Privacy</Link></p>
       </form>
     </div>
   );

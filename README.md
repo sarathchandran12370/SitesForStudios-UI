@@ -60,7 +60,7 @@ Any host not listed in `APP_HOSTS` (`src/App.jsx`) is treated as a studio's cust
 
 ## Deployment
 
-Pushes to `main` build the app and upload it to S3 behind CloudFront (`.github/workflows/deploy.yml`). Pull requests only build. The one-time AWS setup, including the repository variables this workflow needs (`AWS_DEPLOY_ROLE_ARN`, `UI_BUCKET`, `CLOUDFRONT_DISTRIBUTION_ID`, optional `APP_HOSTS`), is in the API repo's [DEPLOYMENT.md](https://github.com/sarathchandran12370/SitesForStudios-API/blob/main/DEPLOYMENT.md). Until those variables are set, the deploy job is skipped.
+GitHub Actions (`.github/workflows/ci.yml`) runs the tests and a build on every push. The app is deployed together with the API to the EC2 test server (`https://api.thaaram.in`); see the API repo's [DEPLOYMENT.md](https://github.com/sarathchandran12370/SitesForStudios-API/blob/main/DEPLOYMENT.md).
 
 ## Future split
 

@@ -10,7 +10,7 @@ export default function Signup() {
   const [options, setOptions] = useState(null);
   const [step, setStep] = useState('type');
   const [type, setType] = useState('studio');
-  const [f, setF] = useState({ studioName: '', orgName: '', name: '', email: '', phone: '', password: '', planId: 'pro', website: '' });
+  const [f, setF] = useState({ studioName: '', orgName: '', name: '', email: '', phone: '', password: '', planId: 'pro', website: '', acceptTerms: false });
   const [pending, setPending] = useState(null); // { requestId, email, devCode? }
   const [code, setCode] = useState('');
   const [cooldown, setCooldown] = useState(0);
@@ -136,10 +136,14 @@ export default function Signup() {
             )}
             {plans.length === 1 && <p className="small muted" style={{ margin: 0 }}>Organization plan · {inr(plans[0].price_monthly_inr)}/month after the trial.</p>}
             <input tabIndex={-1} autoComplete="off" value={f.website} onChange={set('website')} style={{ position: 'absolute', left: -9999, width: 1, height: 1 }} aria-hidden="true" />
+            <label className="row small" style={{ alignItems: 'flex-start', gap: 10 }}>
+              <input type="checkbox" checked={f.acceptTerms} onChange={(e) => setF({ ...f, acceptTerms: e.target.checked })} required style={{ marginTop: 3 }} />
+              <span>I agree to the <Link to="/terms" target="_blank">Terms of Service</Link> and <Link to="/privacy" target="_blank">Privacy Policy</Link>.</span>
+            </label>
             {error && <div className="error">{error}</div>}
             <div className="row between">
               <button type="button" className="btn ghost" onClick={() => setStep('type')}>Back</button>
-              <button className="btn primary" disabled={busy}>{busy ? 'Sending code…' : 'Continue'}</button>
+              <button className="btn primary" disabled={busy || !f.acceptTerms}>{busy ? 'Sending code…' : 'Continue'}</button>
             </div>
           </form>
         )}
