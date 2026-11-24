@@ -38,3 +38,9 @@ export const fmtDate = (d) =>
   d ? new Date(`${String(d).slice(0, 10)}T00:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
 
 export const inr = (n) => `₹${Number(n).toLocaleString('en-IN')}`;
+
+/** Paise -> "₹1,23,456.50" (whole rupees shown without decimals). */
+export const rupees = (paise = 0) => {
+  const r = Number(paise) / 100;
+  return `₹${r.toLocaleString('en-IN', { minimumFractionDigits: Number.isInteger(r) ? 0 : 2, maximumFractionDigits: 2 })}`;
+};

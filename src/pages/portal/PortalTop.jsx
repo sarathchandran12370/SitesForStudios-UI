@@ -10,6 +10,8 @@ export default function PortalTop({ title }) {
       <Link to="/portal" className="studio" style={{ textDecoration: 'none' }}>{title || user?.studio_name || 'My photos'}</Link>
       <div className="row">
         {isManager && <Link className="btn sm" to={homeFor(user)}>Studio dashboard</Link>}
+        {!isManager && <Link className="btn sm ghost" to="/portal">My photos</Link>}
+        {!isManager && <Link className="btn sm ghost" to="/portal/invoices">Invoices</Link>}
         <Link className="btn sm ghost" to="/privacy">Privacy</Link>
         <Link className="btn sm ghost" to="/change-password">Change password</Link>
         <button className="btn sm" onClick={async () => { await logout(); nav('/login'); }}>Log out</button>

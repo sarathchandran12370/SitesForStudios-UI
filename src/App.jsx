@@ -17,6 +17,7 @@ import StudioHome from './pages/studio/StudioHome.jsx';
 import EventManage from './pages/studio/EventManage.jsx';
 import MyEvents from './pages/portal/MyEvents.jsx';
 import EventView from './pages/portal/EventView.jsx';
+import MyInvoices from './pages/portal/MyInvoices.jsx';
 import SiteRenderer from './site/SiteRenderer.jsx';
 
 
@@ -59,10 +60,12 @@ export default function App() {
         <Route path="/org/billing" element={<Protected roles={['org_admin']}><Billing /></Protected>} />
         <Route path="/studio/:studioId" element={<StudioHome />} />
         <Route path="/studio/:studioId/:tab" element={<StudioHome />} />
+        <Route path="/studio/:studioId/:tab/:itemId" element={<StudioHome />} />
         <Route path="/events/:eventId" element={<EventManage />} />
       </Route>
       <Route path="/portal" element={<Protected><MyEvents /></Protected>} />
       <Route path="/portal/events/:eventId" element={<Protected><EventView /></Protected>} />
+      <Route path="/portal/invoices" element={<Protected><MyInvoices /></Protected>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

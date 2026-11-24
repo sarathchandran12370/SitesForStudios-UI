@@ -19,9 +19,9 @@ All dashboards (Super Admin, Organization, Studio/partner, Client portal) and th
   | --- | --- | --- |
   | Super Admin | `routes/admin.js` | `/api/admin` |
   | Organization | `routes/orgs.js` | `/api/org` |
-  | Studio | `routes/studios.js`, `routes/events.js` | `/api/studios`, `/api/events` |
+  | Studio | `routes/studios.js`, `routes/events.js`, `routes/invoices.js` | `/api/studios`, `/api/events`, `/api/invoices` |
   | Client | `routes/portal.js` | `/api/portal` |
-  | Public | `routes/public.js` | `/api/sites…`, `/api/media`, `/api/uploads` |
+  | Public | `routes/public.js` | `/api/sites…`, `/api/invoice-view`, `/api/media`, `/api/uploads` |
   | Shared | `routes/auth.js`, `routes/billing.js` | `/api/auth`, `/api/billing` |
 
   Logic needed by two roles goes in `server/src/services/`, never in another role's route file.
