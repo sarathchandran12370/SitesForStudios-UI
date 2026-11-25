@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api, fmtDate } from '../../api.js';
 
 const STATUSES = ['new', 'contacted', 'quoted', 'booked', 'lost'];
@@ -6,6 +7,7 @@ const STATUSES = ['new', 'contacted', 'quoted', 'booked', 'lost'];
 export default function Enquiries({ studio }) {
   const [rows, setRows] = useState([]);
   const [filter, setFilter] = useState('');
+  const nav = useNavigate();
   useEffect(() => {
     api(`/studios/${studio.id}/enquiries`).then(setRows);
   }, [studio.id]);
@@ -53,6 +55,9 @@ export default function Enquiries({ studio }) {
                     <select value={r.status} onChange={(e) => setStatus(r.id, e.target.value)} style={{ width: 'auto' }}>
                       {STATUSES.map((s) => <option key={s}>{s}</option>)}
                     </select>
+                    {r.status !== 'booked' && r.status !== 'lost' && (
+                      <div style={{ marginTop: 6 }}><button className="btn sm" onClick={() => nav(`/studio/${studio.id}/bookings/new`, { state: { enquiry: r } })}>Book</button></div>
+                    )}
                   </td>
                 </tr>
               ))}

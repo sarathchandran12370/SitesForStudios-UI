@@ -120,18 +120,20 @@ export default function InvoiceDetail({ studio, invoiceId }) {
             {open && <button className="btn sm" onClick={() => setPaying(true)}>Record payment</button>}
           </div>
           {inv.payments.length ? (
-            <table className="table">
-              <thead><tr><th>Date</th><th>Method</th><th>Reference</th><th style={{ textAlign: 'right' }}>Amount</th><th /></tr></thead>
-              <tbody>
-                {inv.payments.map((p) => (
-                  <tr key={p.id}>
-                    <td>{fmtDate(p.paid_on)}</td><td>{methodLabel(p.method)}</td><td className="small muted">{p.reference || '—'}</td>
-                    <td style={{ textAlign: 'right' }}>{rupees(p.amount_paise)}</td>
-                    <td style={{ textAlign: 'right' }}>{inv.status !== 'cancelled' && <button className="btn ghost sm danger" onClick={() => removePayment(p)}>Remove</button>}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="table-wrap">
+              <table className="table">
+                <thead><tr><th>Date</th><th>Method</th><th>Reference</th><th style={{ textAlign: 'right' }}>Amount</th><th /></tr></thead>
+                <tbody>
+                  {inv.payments.map((p) => (
+                    <tr key={p.id}>
+                      <td>{fmtDate(p.paid_on)}</td><td>{methodLabel(p.method)}</td><td className="small muted">{p.reference || '—'}</td>
+                      <td style={{ textAlign: 'right' }}>{rupees(p.amount_paise)}</td>
+                      <td style={{ textAlign: 'right' }}>{inv.status !== 'cancelled' && <button className="btn ghost sm danger" onClick={() => removePayment(p)}>Remove</button>}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           ) : (
             <p className="muted small" style={{ margin: 0 }}>No payments recorded yet. When your client pays by UPI, bank transfer or cash, record it here.</p>
           )}

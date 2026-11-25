@@ -6,12 +6,14 @@ import WebsiteEditor from './WebsiteEditor.jsx';
 import People from './People.jsx';
 import Enquiries from './Enquiries.jsx';
 import Invoices from './Invoices.jsx';
+import Bookings from './Bookings.jsx';
 import DomainSettings from './DomainSettings.jsx';
 import ChecklistCard from '../../components/ChecklistCard.jsx';
 import { useReloadOnChange } from '../../hooks.js';
 
 const TABS = [
   ['events', 'Events'],
+  ['bookings', 'Bookings'],
   ['website', 'Website'],
   ['clients', 'Clients'],
   ['enquiries', 'Enquiries'],
@@ -59,6 +61,7 @@ export default function StudioHome() {
       {tab === 'clients' && <People studio={studio} role="client" />}
       {tab === 'team' && <People studio={studio} role="staff" />}
       {tab === 'enquiries' && <Enquiries studio={studio} />}
+      {tab === 'bookings' && <Bookings studio={studio} itemId={itemId} />}
       {tab === 'invoices' && <Invoices studio={studio} itemId={itemId} />}
       {tab === 'domain' && <DomainSettings studio={studio} />}
     </>

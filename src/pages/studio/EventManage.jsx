@@ -144,17 +144,19 @@ export default function EventManage() {
             ))}
           </div>
         ) : (
-          <table className="table">
-            <thead><tr><th /><th>File</th><th>Size</th><th>Status</th></tr></thead>
-            <tbody>
-              {photos.map((p) => (
-                <tr key={p.id}>
-                  <td><input type="checkbox" checked={selected.has(p.id)} onChange={() => toggle(p.id)} /></td>
-                  <td>{p.filename}</td><td>{fmtBytes(p.bytes)}</td><td>{p.status}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="table-wrap">
+            <table className="table">
+              <thead><tr><th /><th>File</th><th>Size</th><th>Status</th></tr></thead>
+              <tbody>
+                {photos.map((p) => (
+                  <tr key={p.id}>
+                    <td><input type="checkbox" checked={selected.has(p.id)} onChange={() => toggle(p.id)} /></td>
+                    <td>{p.filename}</td><td>{fmtBytes(p.bytes)}</td><td>{p.status}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
         {!photos.length && <p className="muted">No files yet. Upload above.</p>}
       </div>

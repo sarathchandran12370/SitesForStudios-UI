@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api, rupees } from '../../api.js';
 import { useAsync } from '../../components/ui.jsx';
 
@@ -26,6 +26,7 @@ function preview(f, sellerState) {
 /** Create a new invoice, or edit a draft (pass `invoice`). */
 export default function InvoiceEditor({ studio, invoice, onSaved, onCancel }) {
   const nav = useNavigate();
+  const fromBooking = useLocation().state?.booking;
   const base = `/studio/${studio.id}/invoices`;
   const [settings, setSettings] = useState(null);
   const [clients, setClients] = useState([]);
@@ -46,6 +47,7 @@ export default function InvoiceEditor({ studio, invoice, onSaved, onCancel }) {
         setF({
           clientAccountId: invoice.client_account_id || '',
           eventId: invoice.event_id || '',
+          bookingId: invoice.booking_id || null,
           customer: { name: invoice.customer.name, email: invoice.customer.email || '', phone: invoice.customer.phone || '', address: invoice.customer.address || '', stateCode: invoice.customer.state_code || '', gstin: invoice.customer.gstin || '' },
           issueDate: String(invoice.issue_date).slice(0, 10),
           dueDate: invoice.due_date ? String(invoice.due_date).slice(0, 10) : '',
@@ -56,11 +58,14 @@ export default function InvoiceEditor({ studio, invoice, onSaved, onCancel }) {
         });
       } else {
         const issue = today();
+        const bk = fromBooking;
         setF({
-          clientAccountId: '', eventId: '',
-          customer: { name: '', email: '', phone: '', address: '', stateCode: '', gstin: '' },
+          clientAccountId: bk?.client_account_id && c.some((x) => x.id === bk.client_account_id) ? bk.client_account_id : '',
+          eventId: bk?.event_id || '',
+          bookingId: bk?.id || null,
+          customer: { name: '', email: '', phone: '', address: '', stateCode: '', gstin: '', ...(bk?.customer || {}) },
           issueDate: issue, dueDate: addDays(issue, s.due_days),
-          lines: [emptyLine()], discount: '', gstRate: s.gstin ? s.default_gst_rate : 0, notes: '',
+          lines: [bk?.line ? { ...emptyLine(), ...bk.line } : emptyLine()], discount: '', gstRate: s.gstin ? s.default_gst_rate : 0, notes: '',
         });
       }
     }).catch((e) => setError(e.message));
@@ -87,6 +92,7 @@ export default function InvoiceEditor({ studio, invoice, onSaved, onCancel }) {
   const body = () => ({
     clientAccountId: f.clientAccountId || null,
     eventId: f.eventId || null,
+    bookingId: f.bookingId || null,
     customer: { ...f.customer, gstin: f.customer.gstin.trim() || null, stateCode: f.customer.stateCode || null, email: f.customer.email.trim() || null },
     issueDate: f.issueDate,
     dueDate: f.dueDate || null,

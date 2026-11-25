@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../auth.jsx';
 import { api } from '../api.js';
@@ -32,13 +32,37 @@ function TrialBanner({ user }) {
 export default function AppShell() {
   const { user, logout } = useAuth();
   const nav = useNavigate();
+  const { pathname } = useLocation();
   const [studios, setStudios] = useState([]);
+  // On phones the sidebar is a slide-in drawer. It closes on navigation and on Escape.
+  const [menuOpen, setMenuOpen] = useState(false);
   useEffect(() => {
     api('/studios/mine').then(setStudios).catch(() => {});
   }, []);
+  useEffect(() => setMenuOpen(false), [pathname]);
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+    const onKey = (e) => { if (e.key === 'Escape') setMenuOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [menuOpen]);
   return (
-    <div className="shell">
-      <aside className="side">
+    <div className={menuOpen ? 'shell menu-open' : 'shell'}>
+      <header className="topbar">
+        <a className="brand" href="/"><i />SitesForStudios</a>
+        <button
+          type="button"
+          className="menu-btn"
+          aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={menuOpen}
+          aria-controls="app-nav"
+          onClick={() => setMenuOpen((o) => !o)}
+        >
+          <span aria-hidden="true" />
+        </button>
+      </header>
+      {menuOpen && <div className="side-back" onClick={() => setMenuOpen(false)} />}
+      <aside className="side" id="app-nav">
         <a className="brand" href="/"><i />SitesForStudios</a>
         {user.role === 'super_admin' && <NavLink className="nav" to="/admin">Platform</NavLink>}
         {user.role === 'org_admin' && user.org_mode !== 'single' && <NavLink className="nav" to="/org" end>Organization</NavLink>}
