@@ -59,7 +59,7 @@ export default function EventManage() {
         <div>
           <h1>{event.title}</h1>
           <p className="muted" style={{ margin: 0 }}>
-            {[fmtDate(event.event_date), event.venue, fmtBytes(event.storage_bytes), event.status === 'active' && event.expires_at && `online until ${fmtDate(event.expires_at)}`].filter(Boolean).join(' · ')}
+            {[fmtDate(event.event_date), event.venue, fmtBytes(event.storage_bytes)].filter(Boolean).join(' · ')}
           </p>
         </div>
         <div className="row">
@@ -83,12 +83,11 @@ export default function EventManage() {
           {event.clients.map((c) => <span key={c.id} className="badge">{c.name} · {c.access_level === 'primary' ? 'couple' : 'guest'}</span>)}
           {!event.clients.length && <span className="muted">No clients yet. Add the couple from the Clients tab so they can log in.</span>}
         </div>
-        {event.clients.length > 0 && event.status === 'active' && <NotifyClients event={event} onDone={loadEvent} />}
+        {event.clients.length > 0 && <NotifyClients event={event} onDone={loadEvent} />}
       </div>
       )}
 
-      {event.status !== 'active' && <ArchiveNotice event={event} onChanged={loadEvent} />}
-      {event.status === 'active' && <Uploader event={event} onDone={(n) => { setMessage(`${n} file(s) uploaded. Processing…`); loadPhotos(); loadEvent(); }} />}
+      <Uploader event={event} onDone={(n) => { setMessage(`${n} file(s) uploaded. Processing…`); loadPhotos(); loadEvent(); }} />
       {message && <p className="ok">{message}</p>}
 
       <div className="card stack">
@@ -163,40 +162,6 @@ export default function EventManage() {
 
       {editing && <EventForm studio={studio} event={event} onClose={() => setEditing(false)} onSaved={() => { setEditing(false); loadEvent(); }} />}
     </>
-  );
-}
-
-// Archived events: clients can't see them; the studio can buy a restore.
-function ArchiveNotice({ event, onChanged }) {
-  const [state, setState] = useState({ busy: false, error: '' });
-  const restore = async () => {
-    if (!confirm('Restore this gallery for ₹499? It will be billed with your next invoice. Files come back within about 12 hours and the gallery stays online for 6 more months.')) return;
-    setState({ busy: true, error: '' });
-    try {
-      await api(`/events/${event.id}/restore`, { method: 'POST' });
-      setState({ busy: false, error: '' });
-      onChanged();
-    } catch (e) {
-      setState({ busy: false, error: e.message });
-    }
-  };
-  return (
-    <div className="card stack" style={{ background: '#f8ecd9', borderColor: '#e8c990' }}>
-      {event.status === 'archived' ? (
-        <>
-          <div>
-            <b>Archived{event.archived_at ? ` on ${fmtDate(event.archived_at)}` : ''}.</b> The retention period ended, so clients can no longer view or download this gallery. Uploads are paused.
-          </div>
-          <div className="row">
-            <button className="btn primary sm" disabled={state.busy} onClick={restore}>{state.busy ? 'Requesting…' : 'Restore gallery (₹499)'}</button>
-            <span className="small muted">Back within about 12 hours, then online for 6 more months.</span>
-          </div>
-        </>
-      ) : (
-        <div><b>Restoring.</b> The files are coming back from the archive (up to about 12 hours). You and the couple will get an email when the gallery is online again.</div>
-      )}
-      {state.error && <div className="error">{state.error}</div>}
-    </div>
   );
 }
 

@@ -35,7 +35,7 @@ export default function Privacy() {
         <li>to provide the Service: websites, galleries, downloads, enquiries and notifications;</li>
         <li>to verify sign-ups, keep accounts secure and prevent misuse;</li>
         <li>to bill subscriptions and issue GST invoices, and to meet tax and legal obligations;</li>
-        <li>to send service messages (login details, "photos ready", trial and archive reminders). We do not send marketing without consent.</li>
+        <li>to send service messages (login details, "photos ready", invoices, booking confirmations and trial reminders). We do not send marketing without consent.</li>
       </ul>
       <p>We process data with your consent, to perform our contract with the studio, or where the law requires it. We do not sell personal data.</p>
 
@@ -49,7 +49,8 @@ export default function Privacy() {
 
       <h2>5. Who we share it with</h2>
       <ul>
-        <li><b>Amazon Web Services</b> (Mumbai region): hosting, storage, email delivery and face recognition.</li>
+        <li><b>Amazon Web Services</b> (Mumbai region): hosting, databases, email delivery and face recognition.</li>
+        <li><b>Cloudflare R2:</b> storage of photos and videos.</li>
         <li><b>Razorpay:</b> payment processing.</li>
         <li><b>WhatsApp (Meta):</b> service messages, if the studio enables them.</li>
         <li>Authorities, where required by law.</li>
@@ -57,11 +58,14 @@ export default function Privacy() {
       <p>These providers may only use the data to provide their service to us.</p>
 
       <h2>6. Where data is stored</h2>
-      <p>Data is stored in India (AWS Mumbai). If a provider processes data outside India, it is only as permitted by Indian law.</p>
+      <p>
+        Account, booking, invoice and face data is stored in India (AWS Mumbai). Photos and videos are stored with Cloudflare R2 in its
+        Asia-Pacific region, which may be outside India. Any processing outside India is only as permitted by Indian law.
+      </p>
 
       <h2>7. How long we keep it</h2>
       <ul>
-        <li>Galleries stay online for the period of the studio's plan, then are archived, and are deleted when the studio deletes them or its account ends.</li>
+        <li>Galleries stay online while the studio subscribes, and are deleted when the studio deletes them or its account ends.</li>
         <li>Face data: until the event is deleted or face recognition is switched off for it.</li>
         <li>Account data: while the account is active and for up to 30 days after it closes.</li>
         <li>Invoices and payment records: as long as tax law requires (currently 8 years).</li>

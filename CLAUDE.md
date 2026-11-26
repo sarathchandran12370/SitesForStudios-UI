@@ -31,7 +31,8 @@ All dashboards (Super Admin, Organization, Studio/partner, Client portal) and th
 
 ## Other decisions
 
-- Payments: Razorpay only. AWS region: Mumbai (`ap-south-1`).
+- Payments: Razorpay only. AWS region: Mumbai (`ap-south-1`) for hosting, databases, email and face recognition.
+- Photos and videos: Cloudflare R2 (decided 2026-11-26; free downloads). No gallery archiving: galleries stay online while the studio subscribes and stays within plan storage.
 - Keep both PostgreSQL (tenants, accounts, billing, events, enquiries) and MongoDB (site configs, photo metadata, faces).
 - Users have no self sign-up and no forgot-password link. Studios create accounts and reset passwords; users can change their own.
 - Plan for growth from the product plan: https://claude.ai/artifact/9VSxVSfSFRPEGHnrFM4xet

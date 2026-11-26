@@ -22,7 +22,7 @@ export default function MyEvents() {
           {events?.map((e) => (
             <Link key={e.id} to={`/portal/events/${e.id}`} className="event-card">
               <div className="img" style={{ backgroundImage: e.cover ? `url(${e.cover})` : undefined }} />
-              <h3 style={{ margin: 0 }}>{e.title} {e.status !== 'active' && <span className="badge warn" style={{ verticalAlign: 'middle' }}>Archived</span>}</h3>
+              <h3 style={{ margin: 0 }}>{e.title}</h3>
               <div className="small muted">{[fmtDate(e.event_date), e.venue, `${e.photoCount} photos`].filter(Boolean).join(' · ')}</div>
             </Link>
           ))}

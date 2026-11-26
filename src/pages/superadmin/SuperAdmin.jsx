@@ -100,13 +100,13 @@ export default function SuperAdmin() {
         <h3>Plans</h3>
         <div className="table-wrap">
           <table className="table">
-            <thead><tr><th>Plan</th><th>Monthly</th><th>Yearly</th><th>Storage</th><th>Studios</th><th>Face events / mo</th><th>Staff</th><th>Galleries</th><th>RAW</th><th>Premium templates</th><th>Retention</th><th /></tr></thead>
+            <thead><tr><th>Plan</th><th>Monthly</th><th>Yearly</th><th>Storage</th><th>Studios</th><th>Face events / mo</th><th>Staff</th><th>Galleries</th><th>RAW</th><th>Premium templates</th><th /></tr></thead>
             <tbody>
               {plans.map((p) => (
                 <tr key={p.id}>
                   <td><b>{p.name}</b></td><td>{inr(p.price_monthly_inr)}</td><td>{inr(p.price_yearly_inr)}</td>
                   <td>{fmtStorage(p.storage_gb)}</td><td>{p.max_studios}</td><td>{p.face_events_per_month}</td><td>{p.staff_seats}</td>
-                  <td>{p.client_galleries === false ? 'Website only' : 'Yes'}</td><td>{p.raw_delivery ? 'Yes' : '—'}</td><td>{p.premium_templates ? 'Yes' : '—'}</td><td>{p.retention_months} months</td>
+                  <td>{p.client_galleries === false ? 'Website only' : 'Yes'}</td><td>{p.raw_delivery ? 'Yes' : '—'}</td><td>{p.premium_templates ? 'Yes' : '—'}</td>
                   <td><button className="btn sm" onClick={() => setEditingPlan(p)}>Edit</button></td>
                 </tr>
               ))}
@@ -184,7 +184,6 @@ const NUMBER_FIELDS = [
   ['max_studios', 'Studios'],
   ['face_events_per_month', 'Face recognition events / month'],
   ['staff_seats', 'Staff seats'],
-  ['retention_months', 'Event retention (months)'],
 ];
 
 export function PlanEditor({ plan, onClose, onSaved }) {

@@ -61,16 +61,15 @@ export default function Terms() {
         <li>New accounts may get a free trial. When it ends, the dashboard becomes read-only until you choose a plan, and websites and galleries stay online for a grace period before the account is suspended.</li>
         <li>Paid plans are billed monthly or yearly in advance through Razorpay and renew automatically until cancelled. Prices are shown before you pay, with GST added where applicable. We issue a GST invoice for each payment.</li>
         <li>You can cancel at any time. Cancellation takes effect at the end of the paid period. Except where the law requires otherwise, payments are not refundable for partial periods.</li>
-        <li>Upgrades apply immediately and downgrades from the next period. Add-ons, such as restoring an archived gallery or extra storage, are charged as shown when you request them.</li>
+        <li>Upgrades apply immediately and downgrades from the next period. Add-ons, such as extra storage, are charged as shown when you request them.</li>
         <li>If a renewal fails, your account becomes past due. If payment is not made, we may suspend the account.</li>
         <li>We may change prices with at least 30 days' notice. Changes apply from your next renewal.</li>
       </ul>
 
-      <h2>7. Storage, retention and archiving</h2>
+      <h2>7. Storage</h2>
       <p>
-        Each plan includes a storage limit and a period for which galleries stay online. After that period, galleries are archived: clients
-        can no longer view them, and the Studio can restore them for a fee. We warn the Studio and its main clients before archiving.
-        Please keep your own copies of important files. The Service is not a backup.
+        Each plan includes a storage limit. Galleries stay online while the Studio's subscription is active; when the limit is reached,
+        the Studio can delete old events or move to a bigger plan. Please keep your own copies of important files. The Service is not a backup.
       </p>
 
       <h2>8. Availability and changes</h2>

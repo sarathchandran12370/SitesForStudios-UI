@@ -34,7 +34,7 @@ export default function Billing() {
   }, []);
   if (!data) return <p className="muted">Loading…</p>;
 
-  const { org, plans, profile, invoices, unbilledAddons, billing } = data;
+  const { org, plans, profile, invoices, billing } = data;
   const current = plans.find((p) => p.id === org.planId);
   const pending = plans.find((p) => p.id === org.pendingPlanId);
 
@@ -139,7 +139,7 @@ export default function Billing() {
                 {p.client_galleries !== false && <li>Face recognition on {p.face_events_per_month} events a month</li>}
                 {p.client_galleries !== false && <li>{p.raw_delivery ? 'RAW delivery' : 'No RAW delivery'}</li>}
                 <li>{p.premium_templates ? 'All templates incl. premium' : 'Standard templates'}</li>
-                {p.client_galleries !== false && <li>Galleries online {p.retention_months} months</li>}
+                {p.client_galleries !== false && <li>Galleries stay online while you subscribe</li>}
               </ul>
               <button className={`btn ${isCurrent ? '' : 'primary'}`} disabled={isCurrent || !payable || busy || org.cancelAtPeriodEnd} onClick={() => choose(p)} style={{ justifyContent: 'center' }}>
                 {busy ? 'Please wait…' : label}
@@ -171,12 +171,6 @@ export default function Billing() {
             </tbody>
           </table>
         </div>
-        {unbilledAddons.length > 0 && (
-          <div className="stack" style={{ marginTop: 14, gap: 4 }}>
-            <b className="small">Added to your next invoice</b>
-            {unbilledAddons.map((a) => <span key={a.id} className="small muted">Gallery restore: {a.title} · {inr(a.amount_inr)} + GST</span>)}
-          </div>
-        )}
       </div>
 
       {org.hasSubscription && !org.cancelAtPeriodEnd && (

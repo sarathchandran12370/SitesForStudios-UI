@@ -65,7 +65,7 @@ describe('AccountBlocked', () => {
 describe('PlanEditor (item 10)', () => {
   it('sends numbers and switches to the API', async () => {
     const calls = mockApi({ 'PUT /api/admin/plans/pro': [200, {}] });
-    const plan = { id: 'pro', name: 'Pro', price_monthly_inr: 6999, price_yearly_inr: 69990, storage_gb: 1536, max_studios: 1, face_events_per_month: 8, staff_seats: 3, raw_delivery: true, premium_templates: true, retention_months: 24, razorpay_plan_id: null };
+    const plan = { id: 'pro', name: 'Pro', price_monthly_inr: 6999, price_yearly_inr: 69990, storage_gb: 1536, max_studios: 1, face_events_per_month: 8, staff_seats: 3, raw_delivery: true, premium_templates: true, razorpay_plan_id: null };
     let saved = false;
     render(<PlanEditor plan={plan} onClose={() => {}} onSaved={() => (saved = true)} />);
     const price = screen.getByLabelText('Monthly price (₹)');
@@ -77,7 +77,7 @@ describe('PlanEditor (item 10)', () => {
     const body = calls.find((c) => c.key === 'PUT /api/admin/plans/pro').body;
     expect(body.price_monthly_inr).toBe(7499);
     expect(body.raw_delivery).toBe(false);
-    expect(body.retention_months).toBe(24);
+    expect(body).not.toHaveProperty('retention_months');
     expect(body.razorpay_plan_id).toBe(null);
   });
 });
