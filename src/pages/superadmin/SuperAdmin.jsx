@@ -45,7 +45,10 @@ export default function SuperAdmin() {
           <h1>Platform</h1>
           <p className="muted" style={{ margin: 0 }}>Organizations, plans and usage across SitesForStudios.</p>
         </div>
-        <button className="btn primary" onClick={() => setCreating(true)}>New organization</button>
+        <div className="row">
+          <button className="btn" onClick={() => setCreating('studio')}>New studio</button>
+          <button className="btn primary" onClick={() => setCreating('org')}>New organization</button>
+        </div>
       </div>
 
       {overview && (
@@ -159,7 +162,14 @@ export default function SuperAdmin() {
         </div>
       </div>
 
-      {creating && (
+      {creating === 'studio' && (
+        <CreateStudio
+          plans={plans}
+          onClose={() => setCreating(false)}
+          onCreated={(r) => { setCreating(false); setCreated(r); load(); }}
+        />
+      )}
+      {creating === 'org' && (
         <CreateOrg
           plans={plans}
           onClose={() => setCreating(false)}
@@ -167,9 +177,10 @@ export default function SuperAdmin() {
         />
       )}
       {created && (
-        <Modal title="Organization created" onClose={() => setCreated(null)}>
+        <Modal title={created.studio ? 'Studio created' : 'Organization created'} onClose={() => setCreated(null)}>
+          {created.studio && <p className="small muted" style={{ marginTop: 0 }}>Website address: <b>{created.studio.slug}</b>. Its organization was created automatically.</p>}
           {created.invited && <p className="ok" style={{ marginTop: 0 }}>Login details were emailed to {created.owner.email}.</p>}
-          <SecretBox label={`Login details for the owner of ${created.org.name}.`} email={created.owner.email} password={created.owner.temporaryPassword} />
+          <SecretBox label={`Login details for the owner of ${created.studio?.name || created.org.name}.`} email={created.owner.email} password={created.owner.temporaryPassword} />
         </Modal>
       )}
       {editingPlan && <PlanEditor plan={editingPlan} onClose={() => setEditingPlan(null)} onSaved={() => { setEditingPlan(null); load(); }} />}
@@ -244,6 +255,33 @@ function CreateOrg({ plans, onClose, onCreated }) {
         <label className="row"><input type="checkbox" checked={f.sendInvite} onChange={(e) => setF({ ...f, sendInvite: e.target.checked })} /> Email the login details to the owner</label>
         {error && <div className="error">{error}</div>}
         <button className="btn primary" disabled={busy}>Create organization</button>
+      </form>
+    </Modal>
+  );
+}
+
+// One studio with its organization created behind the scenes (like self sign-up). The owner lands in the studio dashboard.
+function CreateStudio({ plans, onClose, onCreated }) {
+  const [f, setF] = useState({ studioName: '', planId: 'pro', ownerName: '', ownerEmail: '', ownerPhone: '', sendInvite: true });
+  const { busy, error, run } = useAsync();
+  const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
+  const studioPlans = plans.filter((p) => p.id !== 'organization');
+  return (
+    <Modal title="New studio" onClose={onClose}>
+      <form className="stack" onSubmit={(e) => { e.preventDefault(); run(async () => onCreated(await api('/admin/studios', { method: 'POST', body: { ...f, ownerPhone: f.ownerPhone || undefined } }))); }}>
+        <p className="small muted" style={{ margin: 0 }}>For a single studio. An organization with the same name is created automatically; the owner goes straight to the studio dashboard.</p>
+        <label className="field">Studio name<input value={f.studioName} onChange={set('studioName')} required /></label>
+        <label className="field">Plan
+          <select value={f.planId} onChange={set('planId')}>{studioPlans.map((p) => <option key={p.id} value={p.id}>{p.name} — {inr(p.price_monthly_inr)}/mo</option>)}</select>
+        </label>
+        <div className="grid2">
+          <label className="field">Owner name<input value={f.ownerName} onChange={set('ownerName')} required /></label>
+          <label className="field">Owner phone<input value={f.ownerPhone} onChange={set('ownerPhone')} /></label>
+        </div>
+        <label className="field">Owner email<input type="email" value={f.ownerEmail} onChange={set('ownerEmail')} required /></label>
+        <label className="row"><input type="checkbox" checked={f.sendInvite} onChange={(e) => setF({ ...f, sendInvite: e.target.checked })} /> Email the login details to the owner</label>
+        {error && <div className="error">{error}</div>}
+        <button className="btn primary" disabled={busy}>Create studio</button>
       </form>
     </Modal>
   );
