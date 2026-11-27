@@ -23,7 +23,7 @@ export default function BookingDetail({ studio, bookingId }) {
   }, []);
 
   if (error && !b) return <p className="error">{error} <Link to={base}>Back to calendar</Link></p>;
-  if (!b) return <p className="muted">Loading…</p>;
+  if (!b) return <p className="muted loading">Loading…</p>;
   if (editing) return <BookingEditor studio={studio} booking={b} onCancel={() => setEditing(false)} onSaved={(x) => { setB(x); setEditing(false); setNotice(x.emailed ? `Saved. The updated dates were emailed to ${x.client_email}.` : 'Saved.'); }} />;
 
   const setStatus = (status) =>

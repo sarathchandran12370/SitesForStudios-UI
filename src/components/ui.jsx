@@ -53,3 +53,20 @@ export function StatusBadge({ value }) {
   const tone = { expired: 'bad', paid: 'good', void: 'bad', sent: 'good', logged: 'accent', skipped: '', archived: 'warn', restoring: 'warn', active: 'good', live: 'good', verified: 'good', booked: 'good', ready: 'good', trial: 'accent', new: 'accent', pending: 'warn', past_due: 'warn', contacted: 'warn', quoted: 'warn', suspended: 'bad', failed: 'bad', lost: 'bad', cancelled: 'bad' }[value] || '';
   return <span className={`badge ${tone}`}>{String(value).replace('_', ' ')}</span>;
 }
+
+/** Password field with a show/hide toggle. Put it inside a <label className="field">. */
+export function PasswordInput(props) {
+  const [show, setShow] = useState(false);
+  return (
+    <span className="pw">
+      <input {...props} type={show ? 'text' : 'password'} />
+      <button type="button" className="pw-toggle" aria-label={show ? 'Hide password' : 'Show password'} aria-pressed={show} onClick={() => setShow(!show)}>
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
+          <circle cx="12" cy="12" r="3" />
+          {show && <path d="M3 3l18 18" />}
+        </svg>
+      </button>
+    </span>
+  );
+}

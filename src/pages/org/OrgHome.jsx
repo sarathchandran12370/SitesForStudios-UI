@@ -31,7 +31,7 @@ function OrgDashboard() {
     api('/org/onboarding').then(setChecklist).catch(() => {});
   }, []);
   useReloadOnChange(() => api('/org/onboarding').then(setChecklist).catch(() => {}));
-  if (!org) return <p className="muted">Loading…</p>;
+  if (!org) return <p className="muted loading">Loading…</p>;
   const usedPct = Math.min(100, (org.usage.storage_bytes / (org.plan.storage_gb * 1024 ** 3)) * 100);
 
   return (
@@ -53,7 +53,7 @@ function OrgDashboard() {
       </div>
       <ChecklistCard title="Set up your organization" checklist={checklist} storageKey={`sfs-org-checklist-${org.id}`} />
       {renaming && <RenameOrg org={org} onClose={() => setRenaming(false)} onSaved={() => { setRenaming(false); load(); }} />}
-      <div className="grid2" style={{ marginBottom: 16 }}>
+      <div className="stats">
         <div className="card stat">
           <span className="muted small">Storage used</span>
           <b>{fmtBytes(org.usage.storage_bytes)} <span className="small muted">of {org.plan.storage_gb >= 1024 ? `${(org.plan.storage_gb / 1024).toFixed(1)} TB` : `${org.plan.storage_gb} GB`}</span></b>

@@ -40,15 +40,19 @@ export default function StudioHome() {
   }, [studioId, tab]);
   useReloadOnChange(loadChecklist, [studioId]);
   if (error) return <p className="error">{error}</p>;
-  if (!studio) return <p className="muted">Loading…</p>;
+  if (!studio) return <p className="muted loading">Loading…</p>;
   return (
     <>
       <div className="page-head">
-        <div>
-          <h1>{studio.name}</h1>
-          <p className="muted" style={{ margin: 0 }}>
-            {studio.plan.name} plan · {studio.published_at ? 'Website live' : 'Website not published yet'}
-          </p>
+        <div className="head-id">
+          <span className="head-mono" aria-hidden="true">{studio.name.split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase()}</span>
+          <div>
+            <h1>{studio.name}</h1>
+            <p className="muted row" style={{ margin: 0, gap: 8 }}>
+              <span>{studio.plan.name} plan</span>
+              <span className={`pill ${studio.published_at ? 'good' : ''}`}><i />{studio.published_at ? 'Website live' : 'Website not published yet'}</span>
+            </p>
+          </div>
         </div>
         <Link className="btn" to={`/s/${studio.slug}`} target="_blank">View website ↗</Link>
       </div>

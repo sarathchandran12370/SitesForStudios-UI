@@ -19,7 +19,7 @@ export default function MyInvoices() {
         <h1>Invoices</h1>
         <p className="muted" style={{ marginTop: 0 }}>{due > 0 ? `${rupees(due)} is due in total. Open an invoice to see how to pay.` : 'Invoices from your photographer appear here.'}</p>
         {error && <p className="error">{error}</p>}
-        {rows === null && <p className="muted">Loading…</p>}
+        {rows === null && <p className="muted loading">Loading…</p>}
         {rows?.length === 0 && !error && <div className="card">No invoices yet.</div>}
         {rows?.length > 0 && (
           <div className="card">

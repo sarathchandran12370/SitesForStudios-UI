@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth, homeFor } from '../auth.jsx';
 import AuthLayout from '../components/AuthLayout.jsx';
+import { PasswordInput } from '../components/ui.jsx';
 
 export default function Login() {
   const { user, login } = useAuth();
@@ -35,7 +36,7 @@ export default function Login() {
           <p className="muted" style={{ margin: 0 }}>Log in to your studio or to see your photos.</p>
         </div>
         <label className="field">Email<input type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} required /></label>
-        <label className="field">Password<input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required /></label>
+        <label className="field">Password<PasswordInput autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required /></label>
         {error && <div className="error" role="alert">{error}</div>}
         <button className="btn primary" disabled={busy}>{busy ? 'Logging in…' : 'Log in'}</button>
         <p className="small muted" style={{ margin: 0 }}>Forgot your password? Ask your photographer to reset it for you. Accounts are created by your studio.</p>

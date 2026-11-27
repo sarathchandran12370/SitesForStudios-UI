@@ -32,10 +32,12 @@ export default function StudioEvents({ studio }) {
                   <td className="muted">{e.venue}</td>
                   <td>{e.client_count}</td>
                   <td>{fmtBytes(e.storage_bytes)}</td>
-                  <td className="row" style={{ gap: 4 }}>
-                    {e.raw_enabled && <span className="badge">RAW</span>}
-                    {e.face_enabled && <span className="badge">Faces</span>}
-                    {e.show_in_portfolio && <span className="badge accent">Portfolio</span>}
+                  <td>
+                    <div className="row" style={{ gap: 4 }}>
+                      {e.raw_enabled && <span className="badge">RAW</span>}
+                      {e.face_enabled && <span className="badge">Faces</span>}
+                      {e.show_in_portfolio && <span className="badge accent">Portfolio</span>}
+                    </div>
                   </td>
                   <td><Link className="btn sm" to={`/events/${e.id}`}>Manage</Link></td>
                 </tr>

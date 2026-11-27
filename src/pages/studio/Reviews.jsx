@@ -21,7 +21,7 @@ export default function Reviews({ studio }) {
     load();
   };
   if (error) return <p className="error">{error}</p>;
-  if (!list) return <p className="muted">Loading…</p>;
+  if (!list) return <p className="muted loading">Loading…</p>;
   return (
     <div className="stack">
       <p className="muted" style={{ margin: 0 }}>

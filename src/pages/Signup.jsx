@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { api, inr } from '../api.js';
 import { useAuth, homeFor } from '../auth.jsx';
 import AuthLayout from '../components/AuthLayout.jsx';
+import { PasswordInput } from '../components/ui.jsx';
 
 // Self sign-up: 1) studio or organization, 2) details, 3) 6-digit email code.
 export default function Signup() {
@@ -132,7 +133,7 @@ export default function Signup() {
               <label className="field">Phone / WhatsApp<input value={f.phone} onChange={set('phone')} required minLength={6} autoComplete="tel" /></label>
             </div>
             <label className="field">Email<input type="email" value={f.email} onChange={set('email')} required autoComplete="email" /></label>
-            <label className="field">Password<input type="password" value={f.password} onChange={set('password')} required minLength={8} autoComplete="new-password" /></label>
+            <label className="field">Password<PasswordInput value={f.password} onChange={set('password')} required minLength={8} autoComplete="new-password" /></label>
             {plans.length > 1 && (
               <div className="stack" style={{ gap: 6 }}>
                 <span className="small muted">Plan to try (you can change it any time)</span>

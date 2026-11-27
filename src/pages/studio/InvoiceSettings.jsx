@@ -20,7 +20,7 @@ export default function InvoiceSettings({ studio }) {
     }).catch((e) => setError(e.message));
   }, [studio.id]);
   if (error && !f) return <p className="error">{error}</p>;
-  if (!f) return <p className="muted">Loading…</p>;
+  if (!f) return <p className="muted loading">Loading…</p>;
   const set = (k) => (e) => { setSaved(false); setF({ ...f, [k]: e.target.value }); };
   const save = (e) => {
     e.preventDefault();

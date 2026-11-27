@@ -16,7 +16,7 @@ export default function MyEvents() {
       <div className="portal-body">
         <h1>Hello, {user.name.split(' ')[0]}</h1>
         <p className="muted" style={{ marginTop: 0 }}>Your events and photos, delivered by {user.studio_name || 'your studio'}.</p>
-        {events === null && <p className="muted">Loading…</p>}
+        {events === null && <p className="muted loading">Loading…</p>}
         {events?.length === 0 && <div className="card">No events yet. Your studio will add them here when your photos are ready.</div>}
         <div className="event-cards" style={{ marginTop: 24 }}>
           {events?.map((e) => (

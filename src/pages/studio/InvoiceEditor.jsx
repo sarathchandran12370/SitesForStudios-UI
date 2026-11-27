@@ -73,7 +73,7 @@ export default function InvoiceEditor({ studio, invoice, onSaved, onCancel }) {
 
   const totals = useMemo(() => (f && settings ? preview(f, settings.state_code) : null), [f, settings]);
   if (error && !f) return <p className="error">{error}</p>;
-  if (!f || !settings) return <p className="muted">Loading…</p>;
+  if (!f || !settings) return <p className="muted loading">Loading…</p>;
 
   const set = (patch) => setF({ ...f, ...patch });
   const setCustomer = (k) => (e) => set({ customer: { ...f.customer, [k]: e.target.value } });

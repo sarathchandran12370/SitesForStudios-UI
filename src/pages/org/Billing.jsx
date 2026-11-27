@@ -32,7 +32,7 @@ export default function Billing() {
   useEffect(() => {
     load().then((d) => setCycle(d.org.cycle || 'monthly'));
   }, []);
-  if (!data) return <p className="muted">Loading…</p>;
+  if (!data) return <p className="muted loading">Loading…</p>;
 
   const { org, plans, profile, invoices, billing } = data;
   const current = plans.find((p) => p.id === org.planId);

@@ -136,7 +136,7 @@ function BookingCalendar({ studio }) {
 
       <div className="card">
         <h3 style={{ marginTop: 0 }}>Coming up</h3>
-        {upcoming === null ? <p className="muted">Loading…</p> : <Agenda base={base} items={next} empty="No upcoming bookings in the next six months." />}
+        {upcoming === null ? <p className="muted loading">Loading…</p> : <Agenda base={base} items={next} empty="No upcoming bookings in the next six months." />}
       </div>
     </div>
   );

@@ -22,7 +22,7 @@ export default function InvoiceDetail({ studio, invoiceId }) {
   }, [invoiceId]);
 
   if (error && !inv) return <p className="error">{error} <Link to={base}>Back to invoices</Link></p>;
-  if (!inv) return <p className="muted">Loading…</p>;
+  if (!inv) return <p className="muted loading">Loading…</p>;
   if (editing) return <InvoiceEditor studio={studio} invoice={inv} onCancel={() => setEditing(false)} onSaved={(x) => { setInv(x); setEditing(false); }} />;
 
   const act = (fn, msg) => run(async () => { const x = await fn(); if (x?.id) setInv(x); if (msg) setNotice(typeof msg === 'function' ? msg(x) : msg); return x; });

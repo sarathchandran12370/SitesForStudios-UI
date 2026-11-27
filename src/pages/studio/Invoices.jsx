@@ -44,7 +44,7 @@ function InvoiceList({ studio }) {
     api(`/invoices/studio/${studio.id}/settings`).then(setSettings).catch(() => {});
   }, [studio.id]);
   if (error) return <p className="error">{error}</p>;
-  if (!data) return <p className="muted">Loading…</p>;
+  if (!data) return <p className="muted loading">Loading…</p>;
   const s = data.summary;
   const shown = data.invoices.filter((i) => matches(i, filter));
   return (

@@ -49,7 +49,7 @@ export default function SuperAdmin() {
       </div>
 
       {overview && (
-        <div className="grid2" style={{ marginBottom: 16 }}>
+        <div className="stats">
           <div className="card stat"><span className="muted small">Monthly recurring revenue</span><b>{inr(overview.mrr_inr)}</b></div>
           <div className="card stat"><span className="muted small">Organizations · studios</span><b>{overview.organizations} · {overview.studios}</b></div>
           <div className="card stat"><span className="muted small">Events · storage</span><b>{overview.events} · {fmtBytes(overview.storage_bytes)}</b></div>

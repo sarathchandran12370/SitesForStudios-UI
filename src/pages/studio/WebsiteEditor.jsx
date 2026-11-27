@@ -31,7 +31,7 @@ export default function WebsiteEditor({ studio, onSaved }) {
       setHeroChoices(r.heroChoices);
     });
   }, [studio.id]);
-  if (!site) return <p className="muted">Loading…</p>;
+  if (!site) return <p className="muted loading">Loading…</p>;
 
   const set = (patch) => setSite({ ...site, ...patch });
   const save = (publish) =>

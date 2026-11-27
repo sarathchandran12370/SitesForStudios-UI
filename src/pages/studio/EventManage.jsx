@@ -46,7 +46,7 @@ export default function EventManage() {
     return () => clearTimeout(t);
   }, [photos]);
 
-  if (!event || !studio) return <p className="muted">Loading…</p>;
+  if (!event || !studio) return <p className="muted loading">Loading…</p>;
   const ids = [...selected];
   const galleries = studio.plan?.client_galleries !== false;
   const files = only ? photos.filter((p) => only.ids.has(p.id)) : photos;
