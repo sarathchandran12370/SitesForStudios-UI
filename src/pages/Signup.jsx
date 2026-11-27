@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { api, inr } from '../api.js';
 import { useAuth, homeFor } from '../auth.jsx';
+import AuthLayout from '../components/AuthLayout.jsx';
 
 // Self sign-up: 1) studio or organization, 2) details, 3) 6-digit email code.
 export default function Signup() {
@@ -85,10 +86,12 @@ export default function Signup() {
   };
 
   return (
-    <div className="center-page" style={{ background: 'linear-gradient(160deg,#f4ebe1,#faf8f5 60%)', alignItems: 'start', paddingTop: 48 }}>
-      <div className="card stack" style={{ width: 'min(560px,100%)', padding: 32 }}>
+    <AuthLayout wide quote="Your website, galleries and client delivery in one place." points={[`${options?.trialDays || 14} days free, no card needed`, 'Premium templates for wedding studios', 'Full-resolution and RAW delivery']}>
+      <div className="stack">
         <div>
-          <Link to="/" className="brand" style={{ color: 'var(--ink)', padding: 0, marginBottom: 10 }}><i />SitesForStudios</Link>
+          <div className="steps-dots" aria-hidden="true">
+            {['type', 'details', 'code'].map((s, i) => <i key={s} className={i <= ['type', 'details', 'code'].indexOf(step) ? 'on' : ''} />)}
+          </div>
           <h1 style={{ marginBottom: 4 }}>{step === 'code' ? 'Check your email' : 'Start your free trial'}</h1>
           <p className="muted" style={{ margin: 0 }}>
             {step === 'code'
@@ -101,13 +104,21 @@ export default function Signup() {
 
         {step === 'type' && options?.enabled && (
           <div className="stack">
-            <button type="button" className="template-card" style={{ padding: 18 }} onClick={() => chooseType('studio')}>
-              <b>I run a studio</b>
-              <div className="small muted">One studio and its website, galleries and clients. You can grow into an organization later.</div>
+            <button type="button" className="choice" onClick={() => chooseType('studio')}>
+              <span className="mk-icon" aria-hidden="true">◐</span>
+              <span>
+                <b>I run a studio</b>
+                <div className="small muted">One studio and its website, galleries and clients. You can grow into an organization later.</div>
+              </span>
+              <span className="arrow" aria-hidden="true">→</span>
             </button>
-            <button type="button" className="template-card" style={{ padding: 18 }} onClick={() => chooseType('organization')}>
-              <b>I run several studios</b>
-              <div className="small muted">An organization with up to 3 studio brands, each with its own website and team.</div>
+            <button type="button" className="choice" onClick={() => chooseType('organization')}>
+              <span className="mk-icon" aria-hidden="true">⚇</span>
+              <span>
+                <b>I run several studios</b>
+                <div className="small muted">An organization with up to 3 studio brands, each with its own website and team.</div>
+              </span>
+              <span className="arrow" aria-hidden="true">→</span>
             </button>
           </div>
         )}
@@ -163,7 +174,7 @@ export default function Signup() {
             </label>
             {pending?.devCode && <p className="small muted" style={{ margin: 0 }}>Development mode: your code is <b>{pending.devCode}</b></p>}
             {error && <div className="error">{error}</div>}
-            <button className="btn primary" disabled={busy || code.length !== 6} style={{ justifyContent: 'center' }}>{busy ? 'Creating your account…' : 'Verify and create account'}</button>
+            <button className="btn primary" disabled={busy || code.length !== 6}>{busy ? 'Creating your account…' : 'Verify and create account'}</button>
             <div className="row between small">
               <button type="button" className="btn ghost sm" onClick={() => { setStep('details'); setCode(''); }}>Change details</button>
               <button type="button" className="btn ghost sm" disabled={cooldown > 0} onClick={resend}>{cooldown > 0 ? `Resend code in ${cooldown}s` : 'Resend code'}</button>
@@ -173,6 +184,6 @@ export default function Signup() {
 
         <p className="small muted" style={{ margin: 0 }}>Already have an account? <Link to="/login">Log in</Link></p>
       </div>
-    </div>
+    </AuthLayout>
   );
 }
