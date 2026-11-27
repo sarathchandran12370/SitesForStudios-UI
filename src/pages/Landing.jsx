@@ -2,10 +2,10 @@ import { Link } from 'react-router-dom';
 import { inr } from '../api.js';
 
 const plans = [
-  { name: 'Website', price: 999, points: ['Studio website with templates', 'Enquiry inbox and alerts', 'Your own domain', '10 GB portfolio'] },
-  { name: 'Starter', price: 3499, points: ['1 studio website', '500 GB storage', 'Client galleries and downloads', '4 templates'] },
-  { name: 'Pro', price: 6999, points: ['All premium templates', '1.5 TB storage', 'RAW delivery', '3 staff seats'], featured: true },
-  { name: 'Organization', price: 14999, points: ['Up to 3 studio brands', '4 TB storage', 'White label', '10 staff seats'] },
+  { name: 'Website', price: 999, points: ['Studio website with templates', 'Enquiry inbox and alerts', 'Your own domain', '25 GB portfolio'] },
+  { name: 'Starter', price: 2999, points: ['1 studio website', '1 TB storage', 'Client galleries and downloads', '2 staff seats'] },
+  { name: 'Pro', price: 5999, points: ['All premium templates', '2 TB storage', 'RAW delivery', '5 staff seats'], featured: true },
+  { name: 'Organization', price: 13999, points: ['Up to 3 studio brands', '5 TB storage', 'Priority support', '15 staff seats'] },
 ];
 
 export default function Landing() {

@@ -216,7 +216,7 @@ export function PlanEditor({ plan, onClose, onSaved }) {
           <label className="field">Razorpay plan ID, monthly<input placeholder="plan_XXXXXXXX" value={f.razorpay_plan_id} onChange={(e) => setF({ ...f, razorpay_plan_id: e.target.value })} /></label>
           <label className="field">Razorpay plan ID, yearly<input placeholder="plan_YYYYYYYY" value={f.razorpay_plan_id_yearly} onChange={(e) => setF({ ...f, razorpay_plan_id_yearly: e.target.value })} /></label>
         </div>
-        <p className="small muted" style={{ margin: 0 }}>Create these plans in the Razorpay dashboard with the price <b>including GST</b> (e.g. ₹3,499 + 18% = ₹4,128.82). Without a plan ID, that plan can't be bought online.</p>
+        <p className="small muted" style={{ margin: 0 }}>Create these plans in the Razorpay dashboard with the price <b>including GST</b> (e.g. ₹2,999 + 18% = ₹3,538.82). Without a plan ID, that plan can't be bought online.</p>
         <p className="small muted" style={{ margin: 0 }}>Limits apply to every organization on this plan right away. Lowering storage or studios does not delete anything; it only blocks new uploads and studios above the limit.</p>
         {error && <div className="error">{error}</div>}
         <button className="btn primary" disabled={busy}>Save plan</button>
