@@ -4,6 +4,7 @@ import { api } from '../api.js';
 import { useAuth, homeFor } from '../auth.jsx';
 import AuthLayout from '../components/AuthLayout.jsx';
 import { PasswordInput } from '../components/ui.jsx';
+import { useStudioBrand } from '../components/studioBrand.js';
 
 export default function ChangePassword() {
   const { user, refresh } = useAuth();
@@ -12,6 +13,10 @@ export default function ChangePassword() {
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
+  // Clients see their studio's branding, never the platform's.
+  const isClient = user?.role === 'client';
+  const [ctx] = useState(() => (isClient && user.studio_slug ? { slug: user.studio_slug } : null));
+  const brand = useStudioBrand(ctx);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -28,7 +33,11 @@ export default function ChangePassword() {
   };
 
   return (
-    <AuthLayout quote="Keep your studio and your photos safe." points={['At least 8 characters', 'Mix letters, numbers and symbols', 'Do not reuse a password from another site']}>
+    <AuthLayout
+      brand={isClient ? brand || 'none' : undefined}
+      quote={isClient ? (brand ? `Your photos from ${brand.name}` : null) : 'Keep your studio and your photos safe.'}
+      points={['At least 8 characters', 'Mix letters, numbers and symbols', 'Do not reuse a password from another site']}
+    >
       <form className="stack" onSubmit={submit}>
         <div>
           <h1 style={{ marginBottom: 4 }}>{user?.must_change_password ? 'Set your password' : 'Change password'}</h1>

@@ -530,3 +530,12 @@ h1 .btn, h2 .btn, h3 .btn { font-family: Inter, system-ui, -apple-system, sans-s
 .pw-toggle:focus-visible { outline: none; box-shadow: var(--ring); }
 .auth-card .field input { padding: 11px 12px; }
 .auth-card h1 { margin-bottom: 6px; }
+/* White-label auth pages (clients arriving from a studio website): studio name, photo and accent */
+.auth-art { background-size: cover; background-position: center; }
+.white-label .auth-art { background: linear-gradient(to top, rgba(12, 9, 7, 0.75), rgba(12, 9, 7, 0.1) 60%), linear-gradient(135deg, color-mix(in srgb, var(--accent) 55%, #fff), var(--accent) 55%, #1c1917); background-size: cover; background-position: center; }
+.auth-studio { color: #fff; text-decoration: none; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 26px; font-weight: 600; line-height: 1.1; }
+.auth-studio img { display: block; max-height: 56px; max-width: 200px; object-fit: contain; filter: drop-shadow(0 1px 6px rgba(0, 0, 0, 0.35)); }
+.auth-studio.auth-mobile-brand { color: var(--ink); margin-bottom: 18px; }
+.auth-studio.auth-mobile-brand img { filter: none; max-height: 48px; }
+.auth-card .btn.accent { justify-content: center; padding: 11px 14px; }
+.white-label .btn.accent:hover { background: color-mix(in srgb, var(--accent) 85%, #000); border-color: color-mix(in srgb, var(--accent) 85%, #000); }

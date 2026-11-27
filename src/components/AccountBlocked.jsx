@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../auth.jsx';
+import { useAuth, loginPathFor } from '../auth.jsx';
 
 // Shown when the user's organization is suspended or cancelled.
 export default function AccountBlocked() {
@@ -15,7 +15,7 @@ export default function AccountBlocked() {
             ? `Your photos from ${user.studio_name || 'your studio'} are not available right now. Please contact your photographer.`
             : `${user?.org_name || 'This organization'} is ${cancelled ? 'closed' : 'suspended'}, so dashboards, client galleries and websites are offline. Please contact SitesForStudios support to restore access.`}
         </p>
-        <div><button className="btn" onClick={async () => { await logout(); nav('/login'); }}>Log out</button></div>
+        <div><button className="btn" onClick={async () => { const to = loginPathFor(user); await logout(); nav(to); }}>Log out</button></div>
       </div>
     </div>
   );

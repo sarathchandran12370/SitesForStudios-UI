@@ -39,9 +39,18 @@ const MANAGERS = ['super_admin', 'org_admin', 'studio_admin', 'staff'];
 
 export default function App() {
   const host = window.location.hostname;
+  // A studio's custom domain: its website, plus a white-label client login and portal.
+  // The studio team uses the platform's own host for dashboards.
   if (!isAppHost(host)) {
     return (
       <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/change-password" element={<Protected><ChangePassword /></Protected>} />
+        <Route path="/portal" element={<Protected roles={['client']}><MyEvents /></Protected>} />
+        <Route path="/portal/events/:eventId" element={<Protected roles={['client']}><EventView /></Protected>} />
+        <Route path="/portal/invoices" element={<Protected roles={['client']}><MyInvoices /></Protected>} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/privacy" element={<Privacy />} />
         <Route path="*" element={<SiteRenderer byHost={host} />} />
       </Routes>
     );

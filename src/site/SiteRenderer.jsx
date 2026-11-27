@@ -79,7 +79,7 @@ export function StudioSite({ data, enquiry = false, setEnquiry = () => {} }) {
           <a className="logo" href="#top">{site.logoUrl ? <img src={site.logoUrl} alt={studio.name} /> : studio.name}</a>
           <nav>{navItems.map(([id, label]) => <a key={id} href={`#${id}`}>{label}</a>)}</nav>
           <div className="actions">
-            <Link className="login" to="/login">Client login</Link>
+            <Link className="login" to={`/login?studio=${studio.slug}`}>Client login</Link>
             <button className="s-btn" onClick={open}>Book an enquiry</button>
           </div>
         </div>
@@ -181,7 +181,7 @@ export function StudioSite({ data, enquiry = false, setEnquiry = () => {} }) {
       <footer className="site-footer">
         <div className="wrap">
           <span>© {new Date().getFullYear()} {studio.name}</span>
-          <span><Link to="/login">Client login</Link> · Website by SitesForStudios</span>
+          <span><Link to={`/login?studio=${studio.slug}`}>Client login</Link> · Website by SitesForStudios</span>
         </div>
       </footer>
       {site.contact?.whatsapp && <a className="wa-float" href={`https://wa.me/${site.contact.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noreferrer" aria-label="WhatsApp">✆</a>}

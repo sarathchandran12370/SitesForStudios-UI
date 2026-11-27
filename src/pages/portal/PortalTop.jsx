@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth, homeFor } from '../../auth.jsx';
+import { useAuth, homeFor, loginPathFor } from '../../auth.jsx';
 
 const initials = (name = '') => name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase() || '?';
 
@@ -51,7 +51,7 @@ export default function PortalTop({ title }) {
             )}
             <Link role="menuitem" to="/change-password">Change password</Link>
             <Link role="menuitem" to="/privacy">Privacy</Link>
-            <button role="menuitem" type="button" onClick={async () => { await logout(); nav('/login'); }}>Log out</button>
+            <button role="menuitem" type="button" onClick={async () => { const to = loginPathFor(user); await logout(); nav(to); }}>Log out</button>
           </div>
         )}
       </div>

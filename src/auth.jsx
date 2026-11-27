@@ -36,6 +36,9 @@ export function AuthProvider({ children }) {
 
 export const useAuth = () => useContext(AuthCtx);
 
+/** Where to send someone after they log out: clients go back to their studio's branded login. */
+export const loginPathFor = (user) => (user?.role === 'client' && user.studio_slug ? `/login?studio=${encodeURIComponent(user.studio_slug)}` : '/login');
+
 /** Suspended or cancelled organizations lose access (Super Admin never does). */
 export const isOrgBlocked = (user) => !!user && user.role !== 'super_admin' && ['suspended', 'cancelled'].includes(user.org_status);
 
