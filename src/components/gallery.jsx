@@ -27,7 +27,7 @@ export function GalleryHero({ design, title, subtitle, cover }) {
   if (kind === 'split') {
     return (
       <div className="g-hero split">
-        <div className="img" style={{ backgroundImage: `url(${cover})` }} />
+        <div className="img" style={{ backgroundImage: `url("${cover}")` }} />
         <div className="txt">
           <h1>{title}</h1>
           {subtitle && <div className="muted">{subtitle}</div>}
@@ -36,7 +36,7 @@ export function GalleryHero({ design, title, subtitle, cover }) {
     );
   }
   return (
-    <div className="event-hero g-hero full" style={{ backgroundImage: `url(${cover})` }}>
+    <div className="event-hero g-hero full" style={{ backgroundImage: `url("${cover}")` }}>
       <div>
         <h1>{title}</h1>
         {subtitle && <div style={{ opacity: 0.9 }}>{subtitle}</div>}

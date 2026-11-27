@@ -60,8 +60,19 @@ export default function EventView() {
     });
   }, [event?.id, tab, ceremony, cluster, found]);
 
-  if (error) return <div className="center-page"><div className="card">{error} <Link to="/portal">Back</Link></div></div>;
-  if (!event) return <div className="center-page muted">Loading…</div>;
+  if (error) {
+    return (
+      <div className="center-page">
+        <div className="portal-empty" style={{ maxWidth: 420 }}>
+          <span className="portal-empty-ic" aria-hidden="true">!</span>
+          <h3>We couldn't open this gallery</h3>
+          <p className="muted">{error}</p>
+          <Link className="btn" to="/portal">← Back to my events</Link>
+        </div>
+      </div>
+    );
+  }
+  if (!event) return <div className="center-page"><p className="muted loading">Loading your gallery…</p></div>;
 
   const shown = tab === 'people' && found ? found : photos;
   const ids = [...selected];
@@ -90,13 +101,13 @@ export default function EventView() {
     <div className={`portal ${galleryClass(event.design)}`}>
       <PortalTop title={event.studioName} />
       <div className="portal-body">
-        <Link to="/portal" className="small muted">← My events</Link>
+        <Link to="/portal" className="back-link">← My events</Link>
         <div style={{ marginTop: 10 }}>
           <GalleryHero design={event.design} title={event.title} subtitle={[fmtDate(event.eventDate), event.venue].filter(Boolean).join(' · ')} cover={cover} />
         </div>
 
-        <div className="row between" style={{ marginBottom: 12 }}>
-          <nav className="tabs" style={{ marginBottom: 0, borderBottom: 0 }}>
+        <div className="ev-toolbar">
+          <nav className="ev-tabs" aria-label="Gallery sections">
             {event.highlightCount > 0 && <button className={tab === 'highlights' ? 'active' : ''} onClick={() => setTab('highlights')}>Highlights ({event.highlightCount})</button>}
             <button className={tab === 'all' ? 'active' : ''} onClick={() => setTab('all')}>All photos</button>
             {event.videoCount > 0 && <button className={tab === 'videos' ? 'active' : ''} onClick={() => setTab('videos')}>Videos ({event.videoCount})</button>}
@@ -115,8 +126,8 @@ export default function EventView() {
           )}
           {canDownload && tab === 'videos' && event.downloads === 'full' && <a className="btn sm" href={zip('videos')}>⤓ Download all videos</a>}
         </div>
-        {event.downloads === 'web' && <p className="small muted">Your photographer has made web-size downloads available for this gallery.</p>}
-        {!canDownload && <p className="small muted">Downloads are turned off for this gallery. Contact your photographer for copies.</p>}
+        {event.downloads === 'web' && <p className="small muted ev-note">Your photographer has made web-size downloads available for this gallery.</p>}
+        {!canDownload && <p className="small muted ev-note">Downloads are turned off for this gallery. Contact your photographer for copies.</p>}
 
         {event.canSelect && (
           <SelectionBar
@@ -162,7 +173,12 @@ export default function EventView() {
             protect={!canDownload}
           />
         )}
-        {showGrid && !shown.length && tab !== 'people' && <p className="muted">{tab === 'favourites' ? 'Tap ♡ on photos you love to add them to your album selection.' : 'No photos here yet.'}</p>}
+        {showGrid && !shown.length && tab !== 'people' && (
+          <div className="portal-empty">
+            <span className="portal-empty-ic" aria-hidden="true">{tab === 'favourites' ? '♡' : '◐'}</span>
+            <p className="muted">{tab === 'favourites' ? 'Tap ♡ on photos you love to add them to your album selection.' : 'No photos here yet.'}</p>
+          </div>
+        )}
 
         {event.canSelect && <ReviewCard eventId={event.id} review={event.review} studioName={event.studioName} onSaved={loadEvent} />}
         <ContactCard studio={event.studio} />
@@ -170,7 +186,7 @@ export default function EventView() {
 
       {selected.size > 0 && (
         <div className="download-bar">
-          <span>{selected.size} selected</span>
+          <span><b>{selected.size}</b> selected</span>
           <a className="btn sm" href={zip('selected', `&ids=${ids.join(',')}`)}>⤓ Download</a>
           <button className="btn sm" onClick={() => setSelected(new Set())}>Clear</button>
         </div>
