@@ -37,18 +37,34 @@ jobs:
           path: dist
           retention-days: 7
 
-  # Uploads the web app to S3 and refreshes CloudFront. Skipped until the repository variables are set
-  # (Settings -> Secrets and variables -> Actions -> Variables): AWS_DEPLOY_ROLE_ARN, UI_BUCKET,
-  # CLOUDFRONT_DISTRIBUTION_ID, optional APP_HOSTS and AWS_REGION. Uses GitHub OIDC, no stored AWS keys.
+  # Uploads the web app to S3 and refreshes CloudFront on every push to main. Needs these variables on the
+  # "production" environment or the repository: AWS_DEPLOY_ROLE_ARN, UI_BUCKET, CLOUDFRONT_DISTRIBUTION_ID,
+  # optional AWS_REGION. Uses GitHub OIDC, no stored AWS keys.
+  # The job condition can't check those variables: environment variables only exist once the job starts,
+  # so a check here always saw them as empty and skipped the deploy. The first step checks them instead.
   deploy:
     needs: build
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && vars.AWS_DEPLOY_ROLE_ARN != ''
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: production
     permissions:
       id-token: write
       contents: read
     steps:
+      - name: Check deploy settings
+        env:
+          ROLE: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          BUCKET: ${{ vars.UI_BUCKET }}
+          DIST: ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}
+        run: |
+          missing=""
+          [ -n "$ROLE" ] || missing="$missing AWS_DEPLOY_ROLE_ARN"
+          [ -n "$BUCKET" ] || missing="$missing UI_BUCKET"
+          [ -n "$DIST" ] || missing="$missing CLOUDFRONT_DISTRIBUTION_ID"
+          if [ -n "$missing" ]; then
+            echo "::error::Set these variables on the production environment or the repository:$missing"
+            exit 1
+          fi
       - uses: actions/download-artifact@v4
         with:
           name: dist
