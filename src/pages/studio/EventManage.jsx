@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api, fmtBytes, fmtDate } from '../../api.js';
 import { EventForm } from './StudioEvents.jsx';
+import { GallerySettings, ShareLink, Selections, CommentThreads } from './EventGallery.jsx';
 
 const CEREMONIES = ['Engagement', 'Haldi', 'Mehndi', 'Sangeet', 'Wedding', 'Reception', 'Pre-wedding'];
 const PARALLEL = 4;
@@ -16,6 +17,7 @@ export default function EventManage() {
   const [selected, setSelected] = useState(new Set());
   const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState('');
+  const [only, setOnly] = useState(null); // { ids, name }: show one client's album selection
 
   const loadEvent = async () => {
     const e = await api(`/events/${eventId}`);
@@ -31,6 +33,12 @@ export default function EventManage() {
     setSelected(new Set());
     loadPhotos();
   }, [eventId, kind, ceremonyFilter]);
+  const showSelection = (ids, name) => {
+    setKind('image');
+    setCeremonyFilter('');
+    setOnly({ ids: new Set(ids), name });
+    document.getElementById('event-files')?.scrollIntoView({ behavior: 'smooth' });
+  };
   // Refresh while photos are still processing.
   useEffect(() => {
     if (!photos.some((p) => p.status === 'uploaded' || p.status === 'processing')) return;
@@ -40,6 +48,8 @@ export default function EventManage() {
 
   if (!event || !studio) return <p className="muted">Loading…</p>;
   const ids = [...selected];
+  const galleries = studio.plan?.client_galleries !== false;
+  const files = only ? photos.filter((p) => only.ids.has(p.id)) : photos;
   const bulk = async (body, method = 'PATCH') => {
     await api(`/events/${eventId}/photos`, { method, body: { photoIds: ids, ...body } });
     setSelected(new Set());
@@ -87,14 +97,30 @@ export default function EventManage() {
       </div>
       )}
 
-      <Uploader event={event} onDone={(n) => { setMessage(`${n} file(s) uploaded. Processing…`); loadPhotos(); loadEvent(); }} />
+      {galleries && (
+        <>
+          <Selections event={event} onShow={showSelection} />
+          <CommentThreads event={event} />
+          <GallerySettings event={event} studioName={studio.name} onSaved={loadEvent} />
+          <ShareLink event={event} onSaved={loadEvent} />
+        </>
+      )}
+
+      <Uploader event={event} videos={galleries} onDone={(n) => { setMessage(`${n} file(s) uploaded. Processing…`); loadPhotos(); loadEvent(); }} />
       {message && <p className="ok">{message}</p>}
 
-      <div className="card stack">
+      <div className="card stack" id="event-files">
+        {only && (
+          <div className="row" style={{ background: 'var(--accent-soft)', padding: 10, borderRadius: 8 }}>
+            <span>Showing <b>{only.name}</b>'s selection ({only.ids.size} photos)</span>
+            <button className="btn sm" onClick={() => setOnly(null)}>Show all photos</button>
+          </div>
+        )}
         <div className="row between">
           <div className="chips">
             <button className={`chip ${kind === 'image' ? 'active' : ''}`} onClick={() => setKind('image')}>Photos</button>
-            {event.raw_enabled && <button className={`chip ${kind === 'raw' ? 'active' : ''}`} onClick={() => setKind('raw')}>RAW files</button>}
+            {galleries && <button className={`chip ${kind === 'video' ? 'active' : ''}`} onClick={() => { setOnly(null); setKind('video'); }}>Videos</button>}
+            {event.raw_enabled && <button className={`chip ${kind === 'raw' ? 'active' : ''}`} onClick={() => { setOnly(null); setKind('raw'); }}>RAW files</button>}
             <span style={{ width: 12 }} />
             {kind === 'image' && (
               <>
@@ -104,9 +130,9 @@ export default function EventManage() {
             )}
           </div>
           <div className="row small muted">
-            {photos.length} files
-            <button className="btn sm ghost" onClick={() => setSelected(selected.size === photos.length ? new Set() : new Set(photos.map((p) => p.id)))}>
-              {selected.size === photos.length && photos.length ? 'Clear selection' : 'Select all'}
+            {files.length} files
+            <button className="btn sm ghost" onClick={() => setSelected(selected.size === files.length ? new Set() : new Set(files.map((p) => p.id)))}>
+              {selected.size === files.length && files.length ? 'Clear selection' : 'Select all'}
             </button>
           </div>
         </div>
@@ -133,7 +159,7 @@ export default function EventManage() {
 
         {kind === 'image' ? (
           <div className="photo-grid">
-            {photos.map((p) => (
+            {files.map((p) => (
               <div key={p.id} className={`photo ${selected.has(p.id) ? 'sel' : ''}`} onClick={() => toggle(p.id)} title={p.filename}>
                 {p.thumb ? <img src={p.thumb} alt={p.filename} loading="lazy" /> : <div className="center-page small muted" style={{ minHeight: '100%' }}>{p.status}…</div>}
                 {p.isHighlight && <span className="tag">★ Highlight</span>}
@@ -147,7 +173,7 @@ export default function EventManage() {
             <table className="table">
               <thead><tr><th /><th>File</th><th>Size</th><th>Status</th></tr></thead>
               <tbody>
-                {photos.map((p) => (
+                {files.map((p) => (
                   <tr key={p.id}>
                     <td><input type="checkbox" checked={selected.has(p.id)} onChange={() => toggle(p.id)} /></td>
                     <td>{p.filename}</td><td>{fmtBytes(p.bytes)}</td><td>{p.status}</td>
@@ -157,7 +183,7 @@ export default function EventManage() {
             </table>
           </div>
         )}
-        {!photos.length && <p className="muted">No files yet. Upload above.</p>}
+        {!files.length && <p className="muted">No files yet. Upload above.</p>}
       </div>
 
       {editing && <EventForm studio={studio} event={event} onClose={() => setEditing(false)} onSaved={() => { setEditing(false); loadEvent(); }} />}
@@ -192,7 +218,7 @@ function NotifyClients({ event, onDone }) {
 }
 
 // Uploads go straight from the browser to storage using signed URLs, a few files at a time.
-function Uploader({ event, onDone }) {
+function Uploader({ event, videos, onDone }) {
   const [ceremony, setCeremony] = useState('Wedding');
   const [over, setOver] = useState(false);
   const [progress, setProgress] = useState(null); // { done, total, failed }
@@ -250,11 +276,11 @@ function Uploader({ event, onDone }) {
         <label className="row small">Ceremony
           <select style={{ width: 'auto' }} value={ceremony} onChange={(e) => setCeremony(e.target.value)}>{CEREMONIES.map((c) => <option key={c}>{c}</option>)}</select>
         </label>
-        <button className="btn primary" onClick={() => inputRef.current.click()}>Choose photos</button>
-        <input ref={inputRef} type="file" multiple hidden accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif,.cr2,.cr3,.nef,.arw,.raf,.orf,.rw2,.dng" onChange={(e) => { start(e.target.files); e.target.value = ''; }} />
+        <button className="btn primary" onClick={() => inputRef.current.click()}>{videos ? 'Choose photos or videos' : 'Choose photos'}</button>
+        <input ref={inputRef} type="file" multiple hidden accept={`image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif,.cr2,.cr3,.nef,.arw,.raf,.orf,.rw2,.dng${videos ? ',video/mp4,video/quicktime,video/webm,.mp4,.mov,.m4v,.webm' : ''}`} onChange={(e) => { start(e.target.files); e.target.value = ''; }} />
       </div>
       <p className="small muted" style={{ marginBottom: 0 }}>
-        Or drag and drop. JPEG, PNG, WebP, HEIC (iPhone){event.raw_enabled ? ', and RAW files (CR3, NEF, ARW, DNG…)' : '. Turn on RAW delivery in Settings to upload RAW files'}.
+        Or drag and drop. JPEG, PNG, WebP, HEIC (iPhone){videos ? ', videos (MP4, MOV, up to 5 GB each)' : ''}{event.raw_enabled ? ', and RAW files (CR3, NEF, ARW, DNG…)' : '. Turn on RAW delivery in Settings to upload RAW files'}.
       </p>
       {progress && (
         <div className="stack" style={{ marginTop: 14, gap: 6, textAlign: 'left' }}>

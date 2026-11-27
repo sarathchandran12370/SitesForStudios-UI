@@ -12,7 +12,7 @@ All dashboards (Super Admin, Organization, Studio/partner, Client portal) and th
 
 ### Rules for new code
 
-- **Web: one folder per role.** `web/src/pages/superadmin/`, `pages/org/`, `pages/studio/`, `pages/portal/`, and `web/src/site/` for public studio websites. Never import from another role's folder. Shared code goes only in `web/src/components/`, `api.js` or `auth.jsx`.
+- **Web: one folder per role.** `web/src/pages/superadmin/`, `pages/org/`, `pages/studio/`, `pages/portal/`, `pages/share/` for guest share-link galleries, and `web/src/site/` for public studio websites. Never import from another role's folder. Shared code goes only in `web/src/components/`, `api.js` or `auth.jsx`.
 - **API: one router per role, under its own prefix.**
 
   | Role | Route file | Prefix |
@@ -22,6 +22,7 @@ All dashboards (Super Admin, Organization, Studio/partner, Client portal) and th
   | Studio | `routes/studios.js`, `routes/events.js`, `routes/invoices.js`, `routes/bookings.js` | `/api/studios`, `/api/events`, `/api/invoices`, `/api/bookings` |
   | Client | `routes/portal.js` | `/api/portal` |
   | Public | `routes/public.js` | `/api/sites…`, `/api/invoice-view`, `/api/media`, `/api/uploads` |
+  | Public (guest share links) | `routes/share.js` | `/api/share` |
   | Shared | `routes/auth.js`, `routes/billing.js` | `/api/auth`, `/api/billing` |
 
   Logic needed by two roles goes in `server/src/services/`, never in another role's route file.

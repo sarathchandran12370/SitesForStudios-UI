@@ -19,6 +19,7 @@ import MyEvents from './pages/portal/MyEvents.jsx';
 import EventView from './pages/portal/EventView.jsx';
 import MyInvoices from './pages/portal/MyInvoices.jsx';
 import SiteRenderer from './site/SiteRenderer.jsx';
+import ShareGallery from './pages/share/ShareGallery.jsx';
 
 
 
@@ -49,6 +50,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/s/:slug" element={<SiteRenderer />} />
+      <Route path="/g/:token" element={<ShareGallery />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/terms" element={<Terms />} />

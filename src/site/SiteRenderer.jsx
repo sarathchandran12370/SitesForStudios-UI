@@ -56,7 +56,9 @@ export default function SiteRenderer({ byHost }) {
 
 /** The whole studio website. Exported so it can be rendered with sample data (tests, previews). */
 export function StudioSite({ data, enquiry = false, setEnquiry = () => {} }) {
-  const { studio, site, hero, portfolio, templateId } = data;
+  const { studio, site, hero, portfolio, templateId, reviews = [] } = data;
+  // Testimonials the studio typed in, then reviews clients left from their galleries (published by the studio).
+  const quotes = [...(site.testimonials || []), ...reviews];
   const layout = layoutFor(templateId);
   const sections = (site.sections?.length ? site.sections : DEFAULT_SECTIONS).filter((s) => s.enabled);
   const has = (id) => sections.some((s) => s.id === id);
@@ -135,11 +137,11 @@ export function StudioSite({ data, enquiry = false, setEnquiry = () => {} }) {
               </section>
             ) : null;
           case 'testimonials':
-            return site.testimonials?.length ? (
+            return quotes.length ? (
               <section key={id} className="s">
                 <div className="wrap">
                   {head('Kind words', 'From our couples')}
-                  <div className="quotes">{site.testimonials.map((t, i) => <div key={i} className="quote"><p>“{t.quote}”</p><span>{t.author}</span></div>)}</div>
+                  <div className="quotes">{quotes.map((t, i) => <div key={i} className="quote">{t.rating ? <div className="stars-static" aria-label={`${t.rating} out of 5`}>{'★'.repeat(t.rating)}</div> : null}<p>“{t.quote}”</p><span>{t.author}</span></div>)}</div>
                 </div>
               </section>
             ) : null;
