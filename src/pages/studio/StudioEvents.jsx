@@ -56,10 +56,11 @@ export function EventForm({ studio, event, onClose, onSaved }) {
     eventDate: event?.event_date || '',
     venue: event?.venue || '',
     rawEnabled: event?.raw_enabled || false,
-    faceEnabled: event?.face_enabled ?? true,
+    faceEnabled: event?.face_enabled ?? false,
     showInPortfolio: event?.show_in_portfolio ?? studio.plan?.client_galleries === false,
   });
   const galleries = studio.plan?.client_galleries !== false;
+  const faces = galleries && studio.plan?.face_events_per_month > 0;
   const { busy, error, run } = useAsync();
   const set = (k) => (e) => setF({ ...f, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value });
   const submit = (e) => {
@@ -78,7 +79,7 @@ export function EventForm({ studio, event, onClose, onSaved }) {
         {galleries && (
           <>
             <label className="row"><input type="checkbox" checked={f.rawEnabled} onChange={set('rawEnabled')} disabled={!studio.plan.raw_delivery} /> Deliver RAW files to the couple {!studio.plan.raw_delivery && <span className="small muted">(Pro plan)</span>}</label>
-            <label className="row"><input type="checkbox" checked={f.faceEnabled} onChange={set('faceEnabled')} /> Face recognition (People tab and Find me)</label>
+            {faces && <label className="row"><input type="checkbox" checked={f.faceEnabled} onChange={set('faceEnabled')} /> Face recognition (People tab and Find me)</label>}
           </>
         )}
         <label className="row"><input type="checkbox" checked={f.showInPortfolio} onChange={set('showInPortfolio')} /> Show highlights in the website portfolio</label>

@@ -41,7 +41,7 @@ export default function Billing() {
   const choose = (plan) =>
     run(async () => {
       setNotice('');
-      if (!profile) throw new Error('Add your billing details below first. They are needed for your GST invoice.');
+      if (!profile) throw new Error('Add your billing details below first. They are printed on your invoice.');
       const total = cycle === 'yearly' ? plan.yearlyTotalPaise : plan.monthlyTotalPaise;
       if (org.hasSubscription) {
         const upgrade = plans.indexOf(plan) > plans.indexOf(current) || (plan.id === org.planId && cycle === 'yearly');
@@ -136,7 +136,7 @@ export default function Billing() {
                 <li>{storage(p.storage_gb)} storage</li>
                 <li>{p.max_studios} studio{p.max_studios > 1 ? 's' : ''}, {p.staff_seats} staff seat{p.staff_seats > 1 ? 's' : ''}</li>
                 <li>{p.client_galleries === false ? 'Website, enquiries and portfolio only (no client galleries)' : 'Client galleries and full-resolution downloads'}</li>
-                {p.client_galleries !== false && <li>Face recognition on {p.face_events_per_month} events a month</li>}
+                {p.client_galleries !== false && p.face_events_per_month > 0 && <li>Face recognition on {p.face_events_per_month} events a month</li>}
                 {p.client_galleries !== false && <li>{p.raw_delivery ? 'RAW delivery' : 'No RAW delivery'}</li>}
                 <li>{p.premium_templates ? 'All templates incl. premium' : 'Standard templates'}</li>
                 {p.client_galleries !== false && <li>Galleries stay online while you subscribe</li>}
@@ -150,7 +150,7 @@ export default function Billing() {
         })}
       </div>
 
-      <BillingDetails profile={profile} onSaved={() => { setNotice('Billing details saved.'); load(); }} />
+      <BillingDetails profile={profile} gst={billing.gst} onSaved={() => { setNotice('Billing details saved.'); load(); }} />
 
       <div className="card">
         <h3>Invoices</h3>
@@ -182,7 +182,7 @@ export default function Billing() {
   );
 }
 
-export function BillingDetails({ profile, onSaved }) {
+export function BillingDetails({ profile, gst = true, onSaved }) {
   const [states, setStates] = useState(null);
   const [f, setF] = useState({
     legalName: profile?.legal_name || '',
@@ -215,11 +215,11 @@ export function BillingDetails({ profile, onSaved }) {
     <form className="card stack" onSubmit={submit} style={{ marginBottom: 16 }}>
       <div>
         <h3 style={{ margin: 0 }}>Billing details</h3>
-        <p className="small muted" style={{ margin: '4px 0 0' }}>Printed on your GST invoices. Add your GSTIN to claim input tax credit.</p>
+        <p className="small muted" style={{ margin: '4px 0 0' }}>{gst ? 'Printed on your GST invoices. Add your GSTIN to claim input tax credit.' : 'Printed on your invoices.'}</p>
       </div>
       <div className="grid2">
         <label className="field">Legal business name<input value={f.legalName} onChange={set('legalName')} required /></label>
-        <label className="field">GSTIN (optional)<input value={f.gstin} onChange={set('gstin')} maxLength={15} placeholder="32ABCDE1234F1Z5" /></label>
+        {gst && <label className="field">GSTIN (optional)<input value={f.gstin} onChange={set('gstin')} maxLength={15} placeholder="32ABCDE1234F1Z5" /></label>}
       </div>
       <label className="field">Address<input value={f.address} onChange={set('address')} required /></label>
       <div className="grid2">

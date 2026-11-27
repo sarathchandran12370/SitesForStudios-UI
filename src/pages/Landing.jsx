@@ -3,8 +3,8 @@ import { inr } from '../api.js';
 
 const plans = [
   { name: 'Website', price: 999, points: ['Studio website with templates', 'Enquiry inbox and alerts', 'Your own domain', '10 GB portfolio'] },
-  { name: 'Starter', price: 3499, points: ['1 studio website', '500 GB storage', 'Face search on 3 events a month', '4 templates'] },
-  { name: 'Pro', price: 6999, points: ['All premium templates', '1.5 TB storage', 'RAW delivery', 'Face search on 8 events a month'], featured: true },
+  { name: 'Starter', price: 3499, points: ['1 studio website', '500 GB storage', 'Client galleries and downloads', '4 templates'] },
+  { name: 'Pro', price: 6999, points: ['All premium templates', '1.5 TB storage', 'RAW delivery', '3 staff seats'], featured: true },
   { name: 'Organization', price: 14999, points: ['Up to 3 studio brands', '4 TB storage', 'White label', '10 staff seats'] },
 ];
 
@@ -24,7 +24,7 @@ export default function Landing() {
           <p className="badge accent">For wedding photographers and studios</p>
           <h1 style={{ fontSize: 'clamp(40px,6vw,64px)', lineHeight: 1.02, margin: '14px 0' }}>Your studio website and client galleries, in one place.</h1>
           <p className="muted" style={{ fontSize: 18, maxWidth: 520 }}>
-            Pick a premium template, take enquiries, and deliver full-resolution and RAW photos to couples. Guests find themselves with face search.
+            Pick a premium template, take enquiries, and deliver full-resolution and RAW photos to couples.
           </p>
           <div className="row" style={{ marginTop: 20 }}>
             <Link className="btn accent" to="/signup">Start your 14-day free trial</Link>
