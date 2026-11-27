@@ -27,7 +27,7 @@ export default function WebsiteEditor({ studio, onSaved }) {
   useEffect(() => {
     api('/studios/templates').then(setTemplates);
     api(`/studios/${studio.id}/site`).then((r) => {
-      setSite({ ...r.site, templateId: studio.template_id, contact: r.site.contact || {}, seo: r.site.seo || {}, packages: r.site.packages || [], testimonials: r.site.testimonials || [], faq: r.site.faq || [] });
+      setSite({ ...r.site, heroImages: r.site.heroImages || [], aboutImage: r.site.aboutImage || null, templateId: studio.template_id, contact: r.site.contact || {}, seo: r.site.seo || {}, packages: r.site.packages || [], testimonials: r.site.testimonials || [], faq: r.site.faq || [] });
       setHeroChoices(r.heroChoices);
     });
   }, [studio.id]);
@@ -36,12 +36,14 @@ export default function WebsiteEditor({ studio, onSaved }) {
   const set = (patch) => setSite({ ...site, ...patch });
   const save = (publish) =>
     run(async () => {
-      const { templateId, theme, tagline, about, heroPhotoIds, sections, packages, testimonials, faq, contact, seo, logoKey } = site;
+      const { templateId, theme, tagline, about, heroImages, aboutImage, sections, packages, testimonials, faq, contact, seo, logoKey } = site;
       const clean = (o) => Object.fromEntries(Object.entries(o || {}).filter(([, v]) => v !== undefined && v !== null));
       await api(`/studios/${studio.id}/site`, {
         method: 'PUT',
         body: {
-          templateId, theme: { accent: theme.accent, fontPair: theme.fontPair }, tagline, about, heroPhotoIds,
+          templateId, theme: { accent: theme.accent, fontPair: theme.fontPair }, tagline, about,
+          heroImages: heroImages.map(slotImage),
+          aboutImage: aboutImage ? slotImage(aboutImage) : null,
           sections: sections.map(({ id, enabled }) => ({ id, enabled })),
           packages: packages.map(({ name, price, features }) => ({ name, price, features })),
           testimonials: testimonials.map(({ quote, author }) => ({ quote, author })),
@@ -61,6 +63,35 @@ export default function WebsiteEditor({ studio, onSaved }) {
       if (!res.ok) throw new Error('Logo upload failed');
       set({ logoKey: key, logoUrl: URL.createObjectURL(file) });
     });
+
+  // Upload a photo for a template image slot; returns { key, url } (url is a local preview).
+  const MAX_IMAGE_MB = 20;
+  const uploadSiteImage = async (file) => {
+    if (file.size > MAX_IMAGE_MB * 1024 * 1024) throw new Error(`${file.name} is larger than ${MAX_IMAGE_MB} MB`);
+    const { key, upload } = await api(`/studios/${studio.id}/site-image-upload`, { method: 'POST', body: { contentType: file.type } });
+    const res = await fetch(upload.url, { method: 'PUT', headers: upload.headers, body: file });
+    if (!res.ok) throw new Error('Photo upload failed');
+    return { key, url: URL.createObjectURL(file) };
+  };
+  const addHeroUploads = (files) =>
+    run(async () => {
+      const room = 6 - site.heroImages.length;
+      if (room <= 0) throw new Error('You can use up to 6 hero images. Remove one first.');
+      const added = [];
+      for (const f of [...files].slice(0, room)) added.push(await uploadSiteImage(f));
+      setSite((s) => ({ ...s, heroImages: [...s.heroImages, ...added].slice(0, 6) }));
+    });
+  const setAboutUpload = (file) => run(async () => { const img = await uploadSiteImage(file); setSite((s) => ({ ...s, aboutImage: img })); });
+  const isHero = (photoId) => site.heroImages.some((i) => i.photoId === photoId);
+  const toggleHeroHighlight = (p) =>
+    set({ heroImages: isHero(p.id) ? site.heroImages.filter((i) => i.photoId !== p.id) : [...site.heroImages, { photoId: p.id, url: p.thumb }].slice(0, 6) });
+  const moveHero = (i, dir) => {
+    const h = [...site.heroImages];
+    const j = i + dir;
+    if (j < 0 || j >= h.length) return;
+    [h[i], h[j]] = [h[j], h[i]];
+    set({ heroImages: h });
+  };
 
   // Picking a template switches to its own fonts, and to its colour unless the studio set its own brand colour.
   const pickTemplate = (id) => {
@@ -140,12 +171,35 @@ export default function WebsiteEditor({ studio, onSaved }) {
 
       <section className="card stack">
         <h3>Hero images</h3>
-        <p className="muted small" style={{ margin: 0 }}>Pick up to 6 from your highlights. Mark photos as highlights inside an event to see them here.</p>
+        <p className="muted small" style={{ margin: 0 }}>
+          The big photos at the top of your website (a slideshow, or the arch and mosaic in some templates). Use up to 6: upload your own or pick from your highlights. With none chosen, photos from your portfolio are used.
+        </p>
+        <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
+          {site.heroImages.map((img, i) => (
+            <div key={img.key || img.photoId} className="stack" style={{ gap: 4, width: 120 }}>
+              <div style={{ width: 120, height: 80, borderRadius: 6, background: img.url ? `#eee center/cover url(${img.url})` : '#eee', display: 'grid', placeItems: 'center' }}>
+                {!img.url && <span className="small muted">Unavailable</span>}
+              </div>
+              <div className="row between" style={{ gap: 2 }}>
+                <button className="btn sm ghost" onClick={() => moveHero(i, -1)} aria-label="Move left" disabled={i === 0}>←</button>
+                <button className="btn sm ghost danger" onClick={() => set({ heroImages: site.heroImages.filter((_, j) => j !== i) })}>Remove</button>
+                <button className="btn sm ghost" onClick={() => moveHero(i, 1)} aria-label="Move right" disabled={i === site.heroImages.length - 1}>→</button>
+              </div>
+            </div>
+          ))}
+          {site.heroImages.length < 6 && (
+            <label className="btn" style={{ width: 120, height: 80, display: 'grid', placeItems: 'center' }}>
+              {busy ? 'Uploading…' : '+ Upload'}
+              <input type="file" accept="image/jpeg,image/png,image/webp" multiple hidden onChange={(e) => { e.target.files.length && addHeroUploads(e.target.files); e.target.value = ''; }} />
+            </label>
+          )}
+        </div>
+        <span className="small muted">Or pick from your highlights (mark photos as highlights inside an event to see them here):</span>
         <div className="photo-grid" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(110px,1fr))' }}>
           {heroChoices.map((p) => {
-            const on = site.heroPhotoIds?.includes(p.id);
+            const on = isHero(p.id);
             return (
-              <div key={p.id} className={`photo ${on ? 'sel' : ''}`} onClick={() => set({ heroPhotoIds: on ? site.heroPhotoIds.filter((x) => x !== p.id) : [...(site.heroPhotoIds || []), p.id].slice(0, 6) })}>
+              <div key={p.id} className={`photo ${on ? 'sel' : ''}`} onClick={() => toggleHeroHighlight(p)}>
                 <img src={p.thumb} alt="" loading="lazy" />
                 <span className="check">{on ? '✓' : ''}</span>
               </div>
@@ -153,6 +207,36 @@ export default function WebsiteEditor({ studio, onSaved }) {
           })}
           {!heroChoices.length && <span className="muted small">No highlights yet.</span>}
         </div>
+      </section>
+
+      <section className="card stack">
+        <h3>About photo</h3>
+        <p className="muted small" style={{ margin: 0 }}>Shown beside your About text. With none chosen, a photo from your portfolio is used.</p>
+        <div className="row" style={{ gap: 12 }}>
+          <div style={{ width: 120, height: 150, borderRadius: 6, background: site.aboutImage?.url ? `#eee center/cover url(${site.aboutImage.url})` : '#eee', display: 'grid', placeItems: 'center' }}>
+            {!site.aboutImage && <span className="small muted">Automatic</span>}
+          </div>
+          <div className="stack" style={{ gap: 6 }}>
+            <label className="btn sm">Upload photo<input type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(e) => { e.target.files[0] && setAboutUpload(e.target.files[0]); e.target.value = ''; }} /></label>
+            {site.aboutImage && <button className="btn sm ghost" onClick={() => set({ aboutImage: null })}>Use automatic photo</button>}
+          </div>
+        </div>
+        {!!heroChoices.length && (
+          <>
+            <span className="small muted">Or pick one of your highlights:</span>
+            <div className="photo-grid" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(90px,1fr))' }}>
+              {heroChoices.map((p) => {
+                const on = site.aboutImage?.photoId === p.id;
+                return (
+                  <div key={p.id} className={`photo ${on ? 'sel' : ''}`} onClick={() => set({ aboutImage: on ? null : { photoId: p.id, url: p.thumb } })}>
+                    <img src={p.thumb} alt="" loading="lazy" />
+                    <span className="check">{on ? '✓' : ''}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
       </section>
 
       <section className="card stack">
@@ -225,6 +309,9 @@ export default function WebsiteEditor({ studio, onSaved }) {
     </div>
   );
 }
+
+// What the API stores for an image slot (drops the preview url).
+const slotImage = ({ photoId, key }) => (photoId ? { photoId } : { key });
 
 function ListEditor({ title, items, max, blank, onChange, render }) {
   return (

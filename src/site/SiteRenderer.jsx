@@ -56,7 +56,7 @@ export default function SiteRenderer({ byHost }) {
 
 /** The whole studio website. Exported so it can be rendered with sample data (tests, previews). */
 export function StudioSite({ data, enquiry = false, setEnquiry = () => {} }) {
-  const { studio, site, hero, portfolio, templateId, reviews = [] } = data;
+  const { studio, site, hero, portfolio, templateId, aboutImage, reviews = [] } = data;
   // Testimonials the studio typed in, then reviews clients left from their galleries (published by the studio).
   const quotes = [...(site.testimonials || []), ...reviews];
   const layout = layoutFor(templateId);
@@ -96,7 +96,7 @@ export function StudioSite({ data, enquiry = false, setEnquiry = () => {} }) {
             return (
               <section key={id} id="about" className="s">
                 <div className="wrap about-grid">
-                  <div className="img" style={{ backgroundImage: allPhotos[1] ? `url(${allPhotos[1].web})` : undefined }} />
+                  <div className="img" style={{ backgroundImage: (aboutImage || allPhotos[1]?.web) ? `url(${aboutImage || allPhotos[1].web})` : undefined }} />
                   <div>
                     {layout.numbered ? <div className="num-label">{String(++n).padStart(2, '0')} — About</div> : <div className="eyebrow">About us</div>}
                     {layout.script && <div className="script-note">hello, we're {studio.name.split(' ')[0]}</div>}
