@@ -59,3 +59,30 @@ describe('templates', () => {
     expect(renderSite(data('nope')).querySelector('.site.tpl-editorial')).not.toBeNull();
   });
 });
+
+describe('website interactions', () => {
+  it('opens portfolio photos in a viewer with arrows and Escape', async () => {
+    const { fireEvent, screen } = await import('@testing-library/react');
+    renderSite(data('editorial'));
+    fireEvent.click(screen.getByRole('button', { name: 'Open photo 2 from Anjali & Rahul' }));
+    expect(screen.getByRole('dialog', { name: 'Anjali & Rahul' })).toBeInTheDocument();
+    expect(screen.getByText('2 / 3')).toBeInTheDocument();
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+    expect(screen.getByText('3 / 3')).toBeInTheDocument();
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+    expect(screen.getByText('1 / 3')).toBeInTheDocument();
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(screen.queryByRole('dialog', { name: 'Anjali & Rahul' })).not.toBeInTheDocument();
+  });
+
+  it('has a phone menu with the sections and client login', async () => {
+    const { fireEvent, screen, within } = await import('@testing-library/react');
+    renderSite(data('boho'));
+    fireEvent.click(screen.getByRole('button', { name: 'Open menu' }));
+    const menu = screen.getByRole('navigation', { name: 'Menu' });
+    expect(within(menu).getByRole('link', { name: 'Portfolio' })).toHaveAttribute('href', '#portfolio');
+    expect(within(menu).getByRole('link', { name: 'Client login' })).toHaveAttribute('href', '/login?studio=arjun');
+    fireEvent.click(within(menu).getByRole('link', { name: 'FAQ' }));
+    expect(screen.queryByRole('navigation', { name: 'Menu' })).not.toBeInTheDocument();
+  });
+});

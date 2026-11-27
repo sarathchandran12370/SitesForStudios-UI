@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api } from '../api.js';
 import './site.css';
@@ -70,9 +70,24 @@ export function StudioSite({ data, enquiry = false, setEnquiry = () => {} }) {
   const heroImages = hero.length ? hero : allPhotos.slice(0, 5).map((p) => p.web);
   let n = 0; // section number for numbered templates
   const head = (eyebrow, title) => <SectionHead eyebrow={eyebrow} title={title} layout={layout} index={++n} />;
+  const [menu, setMenu] = useState(false);
+  const [viewer, setViewer] = useState(null); // { photos: [{ web, title }], index }
+  const openPhotos = (photos, index) => setViewer({ photos, index });
+  const rootRef = useReveal();
+  const contact = site.contact || {};
+  const waHref = contact.whatsapp ? `https://wa.me/${contact.whatsapp.replace(/\D/g, '')}` : null;
+  const igHref = contact.instagram ? (/^https?:\/\//.test(contact.instagram) ? contact.instagram : `https://instagram.com/${contact.instagram.replace(/^@/, '')}`) : null;
+  const nextId = sections[0]?.id;
+
+  useEffect(() => {
+    if (!menu) return undefined;
+    const onKey = (e) => e.key === 'Escape' && setMenu(false);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [menu]);
 
   return (
-    <div className={`site tpl-${TEMPLATE_LAYOUTS[templateId] ? templateId : 'editorial'}${fontPair !== 'template' ? ` font-${fontPair}` : ''}`} style={{ '--accent': accent }}>
+    <div ref={rootRef} className={`site tpl-${TEMPLATE_LAYOUTS[templateId] ? templateId : 'editorial'}${fontPair !== 'template' ? ` font-${fontPair}` : ''}`} style={{ '--accent': accent }}>
       {!studio.published && <div style={{ background: '#1c1917', color: '#fff', textAlign: 'center', fontSize: 13, padding: 6 }}>Preview — this website is not published yet.</div>}
       <header className="site-header">
         <div className="wrap">
@@ -81,22 +96,34 @@ export function StudioSite({ data, enquiry = false, setEnquiry = () => {} }) {
           <div className="actions">
             <Link className="login" to={`/login?studio=${studio.slug}`}>Client login</Link>
             <button className="s-btn" onClick={open}>Book an enquiry</button>
+            <button type="button" className="s-menu-btn" aria-label={menu ? 'Close menu' : 'Open menu'} aria-expanded={menu} onClick={() => setMenu(!menu)}>
+              <span aria-hidden="true" />
+            </button>
           </div>
         </div>
       </header>
+      {menu && (
+        <div className="s-drawer" onMouseDown={(e) => e.target === e.currentTarget && setMenu(false)}>
+          <nav aria-label="Menu">
+            {navItems.map(([id, label]) => <a key={id} href={`#${id}`} onClick={() => setMenu(false)}>{label}</a>)}
+            <Link to={`/login?studio=${studio.slug}`}>Client login</Link>
+            <button className="s-btn" onClick={() => { setMenu(false); open(); }}>Book an enquiry</button>
+          </nav>
+        </div>
+      )}
 
       {layout.hero === 'split' && <HeroSplit images={heroImages} studio={studio} site={site} onEnquire={open} />}
       {layout.hero === 'arch' && <HeroArch images={heroImages} studio={studio} site={site} onEnquire={open} />}
       {layout.hero === 'mosaic' && <HeroMosaic images={heroImages} studio={studio} site={site} onEnquire={open} />}
-      {layout.hero === 'full' && <HeroFull images={heroImages} studio={studio} site={site} onEnquire={open} />}
+      {layout.hero === 'full' && <HeroFull images={heroImages} studio={studio} site={site} onEnquire={open} nextId={nextId} />}
 
       {sections.map(({ id }) => {
         switch (id) {
           case 'about':
             return (
               <section key={id} id="about" className="s">
-                <div className="wrap about-grid">
-                  <div className="img" style={{ backgroundImage: (aboutImage || allPhotos[1]?.web) ? `url(${aboutImage || allPhotos[1].web})` : undefined }} />
+                <div className="wrap about-grid reveal">
+                  <div className="img" style={{ backgroundImage: (aboutImage || allPhotos[1]?.web) ? `url("${aboutImage || allPhotos[1].web}")` : undefined }} />
                   <div>
                     {layout.numbered ? <div className="num-label">{String(++n).padStart(2, '0')} — About</div> : <div className="eyebrow">About us</div>}
                     {layout.script && <div className="script-note">hello, we're {studio.name.split(' ')[0]}</div>}
@@ -112,9 +139,9 @@ export function StudioSite({ data, enquiry = false, setEnquiry = () => {} }) {
               <section key={id} id="portfolio" className="s" style={{ paddingTop: 40 }}>
                 <div className="wrap">
                   {head('Portfolio', 'Recent weddings')}
-                  {layout.portfolio === 'film' && <PortfolioFilm stories={portfolio} />}
-                  {layout.portfolio === 'uniform' && <PortfolioUniform stories={portfolio} />}
-                  {layout.portfolio === 'collage' && <PortfolioCollage stories={portfolio} />}
+                  {layout.portfolio === 'film' && <PortfolioFilm stories={portfolio} onOpen={openPhotos} />}
+                  {layout.portfolio === 'uniform' && <PortfolioUniform stories={portfolio} onOpen={openPhotos} />}
+                  {layout.portfolio === 'collage' && <PortfolioCollage stories={portfolio} onOpen={openPhotos} />}
                 </div>
               </section>
             ) : null;
@@ -123,7 +150,7 @@ export function StudioSite({ data, enquiry = false, setEnquiry = () => {} }) {
               <section key={id} id="packages" className="s alt-bg">
                 <div className="wrap">
                   {head('Investment', 'Packages')}
-                  <div className="packages">
+                  <div className="packages reveal">
                     {site.packages.map((p, i) => (
                       <div key={i} className="package">
                         <h3>{p.name}</h3>
@@ -138,10 +165,10 @@ export function StudioSite({ data, enquiry = false, setEnquiry = () => {} }) {
             ) : null;
           case 'testimonials':
             return quotes.length ? (
-              <section key={id} className="s">
+              <section key={id} id="testimonials" className="s">
                 <div className="wrap">
                   {head('Kind words', 'From our couples')}
-                  <div className="quotes">{quotes.map((t, i) => <div key={i} className="quote">{t.rating ? <div className="stars-static" aria-label={`${t.rating} out of 5`}>{'★'.repeat(t.rating)}</div> : null}<p>“{t.quote}”</p><span>{t.author}</span></div>)}</div>
+                  <div className="quotes reveal">{quotes.map((t, i) => <div key={i} className="quote">{t.rating ? <div className="stars-static" aria-label={`${t.rating} out of 5`}>{'★'.repeat(t.rating)}</div> : null}<p>“{t.quote}”</p><span>{t.author}</span></div>)}</div>
                 </div>
               </section>
             ) : null;
@@ -150,7 +177,7 @@ export function StudioSite({ data, enquiry = false, setEnquiry = () => {} }) {
               <section key={id} id="faq" className="s alt-bg">
                 <div className="wrap">
                   {head('Questions', 'FAQ')}
-                  <div className="faq">{site.faq.map((f, i) => <details key={i}><summary>{f.q}</summary><p>{f.a}</p></details>)}</div>
+                  <div className="faq reveal">{site.faq.map((f, i) => <details key={i}><summary>{f.q}</summary><p>{f.a}</p></details>)}</div>
                 </div>
               </section>
             ) : null;
@@ -158,18 +185,24 @@ export function StudioSite({ data, enquiry = false, setEnquiry = () => {} }) {
             return (
               <section key={id} id="contact" className="s">
                 <div className="wrap contact-grid">
-                  <div className="info">
+                  <div className="info reveal">
                     {layout.numbered ? <div className="num-label">{String(++n).padStart(2, '0')} — Contact</div> : <div className="eyebrow">Get in touch</div>}
                     {layout.ornaments && <Ornament small />}
                     <h2 style={{ fontSize: 'clamp(34px,4vw,50px)', margin: '10px 0 14px' }}>Tell us about your wedding</h2>
-                    <p>
-                      {site.contact?.city && <>{site.contact.city}<br /></>}
-                      {site.contact?.phone && <><a href={`tel:${site.contact.phone}`}>{site.contact.phone}</a><br /></>}
-                      {site.contact?.email && <><a href={`mailto:${site.contact.email}`}>{site.contact.email}</a><br /></>}
-                      {site.contact?.instagram && <><a href={site.contact.instagram} target="_blank" rel="noreferrer">Instagram</a><br /></>}
-                    </p>
+                    <p className="contact-lead">Share your date and plans. We reply within a day.</p>
+                    <ul className="contact-list">
+                      {contact.city && <li><span>Based in</span>{contact.city}</li>}
+                      {contact.phone && <li><span>Call</span><a href={`tel:${contact.phone}`}>{contact.phone}</a></li>}
+                      {contact.email && <li><span>Email</span><a href={`mailto:${contact.email}`}>{contact.email}</a></li>}
+                    </ul>
+                    {(waHref || igHref) && (
+                      <div className="row-btns">
+                        {waHref && <a className="s-btn" href={waHref} target="_blank" rel="noreferrer">WhatsApp us</a>}
+                        {igHref && <a className="s-btn outline" href={igHref} target="_blank" rel="noreferrer">Instagram</a>}
+                      </div>
+                    )}
                   </div>
-                  <EnquiryForm slug={studio.slug} />
+                  <div className="contact-form reveal"><EnquiryForm slug={studio.slug} /></div>
                 </div>
               </section>
             );
@@ -179,15 +212,29 @@ export function StudioSite({ data, enquiry = false, setEnquiry = () => {} }) {
       })}
 
       <footer className="site-footer">
-        <div className="wrap">
+        <div className="wrap foot-grid">
+          <div>
+            <div className="foot-name">{studio.name}</div>
+            {site.tagline && <p>{site.tagline}</p>}
+          </div>
+          {navItems.length > 0 && <nav className="foot-nav" aria-label="Footer">{navItems.map(([id, label]) => <a key={id} href={`#${id}`}>{label}</a>)}</nav>}
+          <div className="foot-contact">
+            {contact.phone && <a href={`tel:${contact.phone}`}>{contact.phone}</a>}
+            {contact.email && <a href={`mailto:${contact.email}`}>{contact.email}</a>}
+            {igHref && <a href={igHref} target="_blank" rel="noreferrer">Instagram</a>}
+            {waHref && <a href={waHref} target="_blank" rel="noreferrer">WhatsApp</a>}
+          </div>
+        </div>
+        <div className="wrap foot-bottom">
           <span>© {new Date().getFullYear()} {studio.name}</span>
           <span><Link to={`/login?studio=${studio.slug}`}>Client login</Link> · Website by SitesForStudios</span>
         </div>
       </footer>
-      {site.contact?.whatsapp && <a className="wa-float" href={`https://wa.me/${site.contact.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noreferrer" aria-label="WhatsApp">✆</a>}
+      {waHref && <a className="wa-float" href={waHref} target="_blank" rel="noreferrer" aria-label="WhatsApp">✆</a>}
+      {viewer && <PhotoViewer {...viewer} setIndex={(index) => setViewer({ ...viewer, index })} onClose={() => setViewer(null)} />}
       {enquiry && (
         <div className="enquiry-modal" onMouseDown={(e) => e.target === e.currentTarget && setEnquiry(false)}>
-          <div className="box">
+          <div className="box" role="dialog" aria-label="Book an enquiry">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
               <div><div className="eyebrow">Book an enquiry</div><h2 style={{ fontSize: 38, margin: '8px 0 20px' }}>Check your date</h2></div>
               <button className="s-btn outline" style={{ padding: '6px 12px' }} onClick={() => setEnquiry(false)} aria-label="Close">✕</button>
@@ -205,14 +252,14 @@ export function StudioSite({ data, enquiry = false, setEnquiry = () => {} }) {
 function SectionHead({ eyebrow, title, layout, index }) {
   if (layout.numbered) {
     return (
-      <div className="s-head numbered">
+      <div className="s-head numbered reveal">
         <div className="num-label">{String(index).padStart(2, '0')} — {eyebrow}</div>
         <h2>{title}</h2>
       </div>
     );
   }
   return (
-    <div className="s-head">
+    <div className="s-head reveal">
       {layout.ornaments ? <Ornament /> : <div className="eyebrow">{eyebrow}</div>}
       <h2>{title}</h2>
       {layout.ornaments && <div className="eyebrow" style={{ marginTop: 10 }}>{eyebrow}</div>}
@@ -240,28 +287,50 @@ export function Ornament({ small }) {
   );
 }
 
+/** Current slide, advancing every few seconds. Picking a slide restarts the timer. */
 function useSlideshow(count, ms = 6000) {
   const [i, setI] = useState(0);
   useEffect(() => {
-    if (count < 2) return;
+    if (count < 2) return undefined;
     const t = setInterval(() => setI((x) => (x + 1) % count), ms);
     return () => clearInterval(t);
-  }, [count, ms]);
-  return i;
+  }, [count, ms, i]);
+  return [i, setI];
 }
 
-function Slides({ images, className }) {
-  const i = useSlideshow(images.length);
-  return images.map((src, j) => <div key={src} className={`${className} ${j === i ? 'on' : ''}`} style={{ backgroundImage: `url(${src})` }} />);
+function Slides({ images, className, index }) {
+  return images.map((src, j) => <div key={src} className={`${className} ${j === index ? 'on' : ''}`} style={{ backgroundImage: `url("${src}")` }} />);
+}
+
+/** Sections fade up as they scroll into view. Off when the visitor prefers reduced motion. */
+function useReveal() {
+  const ref = useRef(null);
+  useEffect(() => {
+    const root = ref.current;
+    if (!root || typeof IntersectionObserver === 'undefined') return undefined;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return undefined;
+    root.classList.add('js-reveal');
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (!e.isIntersecting) return;
+        e.target.classList.add('in');
+        io.unobserve(e.target);
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.06 });
+    root.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, []);
+  return ref;
 }
 
 // ---------------------------------------------------------------- heroes
 
 /** Full-bleed slideshow (Editorial, Classic Luxe, Dark Cinematic). */
-function HeroFull({ images, studio, site, onEnquire }) {
+function HeroFull({ images, studio, site, onEnquire, nextId }) {
+  const [i, setI] = useSlideshow(images.length);
   return (
     <section className="hero" id="top">
-      <Slides images={images} className="slide" />
+      <Slides images={images} className="slide" index={i} />
       <div className="copy">
         <div className="wrap">
           <div className="eyebrow">{site.contact?.city || 'Wedding photography'}</div>
@@ -270,12 +339,19 @@ function HeroFull({ images, studio, site, onEnquire }) {
           <button className="s-btn" onClick={onEnquire}>Book an enquiry</button>
         </div>
       </div>
+      {images.length > 1 && (
+        <div className="hero-dots">
+          {images.map((src, j) => <button key={src} type="button" className={j === i ? 'on' : ''} aria-label={`Show photo ${j + 1}`} aria-pressed={j === i} onClick={() => setI(j)} />)}
+        </div>
+      )}
+      {nextId && <a className="scroll-cue" href={`#${nextId}`} aria-label="Scroll down"><span /></a>}
     </section>
   );
 }
 
 /** Boho Film: words on the left, a tall arched photo on the right. */
 function HeroSplit({ images, studio, site, onEnquire }) {
+  const [i] = useSlideshow(images.length);
   return (
     <section className="h-split" id="top">
       <div className="wrap h-split-inner">
@@ -289,7 +365,7 @@ function HeroSplit({ images, studio, site, onEnquire }) {
           </div>
         </div>
         <div className="h-split-media">
-          <Slides images={images} className="arch-slide" />
+          <Slides images={images} className="arch-slide" index={i} />
           <span className="stamp">film · love · light</span>
         </div>
       </div>
@@ -299,6 +375,7 @@ function HeroSplit({ images, studio, site, onEnquire }) {
 
 /** Indian Traditional: centred photo in an arched frame with gold borders and ornaments. */
 function HeroArch({ images, studio, site, onEnquire }) {
+  const [i] = useSlideshow(images.length);
   return (
     <section className="h-arch" id="top">
       <div className="wrap h-arch-inner">
@@ -307,7 +384,7 @@ function HeroArch({ images, studio, site, onEnquire }) {
         <h1>{studio.name}</h1>
         <p className="h-arch-tag">{site.tagline}</p>
         <div className="arch-frame">
-          <div className="arch-window"><Slides images={images} className="arch-slide" /></div>
+          <div className="arch-window"><Slides images={images} className="arch-slide" index={i} /></div>
         </div>
         <button className="s-btn" onClick={onEnquire}>Book an enquiry</button>
       </div>
@@ -329,7 +406,7 @@ function HeroMosaic({ images, studio, site, onEnquire }) {
           </div>
         </div>
         <div className="mosaic">
-          {five.map((src, k) => <div key={k} className={`m${k}`} style={{ backgroundImage: `url(${src})` }} />)}
+          {five.map((src, k) => <div key={k} className={`m${k}`} style={{ backgroundImage: `url("${src}")` }} />)}
         </div>
         <div className="num-label" style={{ marginTop: 14 }}>{site.contact?.city || 'Wedding photography'} — Weddings · Pre-weddings · Films</div>
       </div>
@@ -339,13 +416,17 @@ function HeroMosaic({ images, studio, site, onEnquire }) {
 
 // ---------------------------------------------------------------- portfolios
 
-function PortfolioCollage({ stories }) {
+const viewList = (story) => story.photos.map((p) => ({ web: p.web, title: story.title }));
+
+function PortfolioCollage({ stories, onOpen }) {
   return stories.map((story) => (
-    <div key={story.id} className="portfolio-story">
+    <div key={story.id} className="portfolio-story reveal">
       <div className="meta"><h3>{story.title}</h3><span className="eyebrow" style={{ color: 'var(--muted)' }}>{story.venue}</span></div>
       <div className="p-grid">
         {story.photos.slice(0, 7).map((p, i) => (
-          <div key={p.id} className={`pi ${i === 0 ? 'wide' : p.h > p.w ? 'tall' : ''}`} style={{ backgroundImage: `url(${p.web})` }} role="img" aria-label={story.title} />
+          <button type="button" key={p.id} className={`pi ${i === 0 ? 'wide' : p.h > p.w ? 'tall' : ''}`} onClick={() => onOpen(viewList(story), i)} aria-label={`Open photo ${i + 1} from ${story.title}`}>
+            <img src={p.web} alt="" loading="lazy" decoding="async" />
+          </button>
         ))}
       </div>
     </div>
@@ -355,14 +436,16 @@ function PortfolioCollage({ stories }) {
 const TILT = [-2.2, 1.6, -1.1, 2.4, -1.7, 1.2];
 
 /** Boho Film: polaroid-style prints in a scrollable film strip. */
-function PortfolioFilm({ stories }) {
+function PortfolioFilm({ stories, onOpen }) {
   return stories.map((story) => (
-    <div key={story.id} className="film-story">
+    <div key={story.id} className="film-story reveal">
       <div className="film-title"><span className="script-note">{story.title}</span>{story.venue && <span className="eyebrow">{story.venue}</span>}</div>
       <div className="film-strip">
         {story.photos.slice(0, 8).map((p, i) => (
           <figure key={p.id} className="polaroid" style={{ '--tilt': `${TILT[i % TILT.length]}deg` }}>
-            <div className="ph" style={{ backgroundImage: `url(${p.web})` }} role="img" aria-label={story.title} />
+            <button type="button" className="ph" onClick={() => onOpen(viewList(story), i)} aria-label={`Open photo ${i + 1} from ${story.title}`}>
+              <img src={p.web} alt="" loading="lazy" decoding="async" />
+            </button>
           </figure>
         ))}
       </div>
@@ -371,15 +454,58 @@ function PortfolioFilm({ stories }) {
 }
 
 /** Modern Grid: strict square grid, story name on hover. */
-function PortfolioUniform({ stories }) {
-  const tiles = stories.flatMap((s) => s.photos.slice(0, 6).map((p) => ({ ...p, story: s })));
+function PortfolioUniform({ stories, onOpen }) {
+  const tiles = stories.flatMap((s) => s.photos.slice(0, 6).map((p) => ({ ...p, story: s }))).slice(0, 12);
+  const list = tiles.map((p) => ({ web: p.web, title: p.story.title }));
   return (
-    <div className="uniform">
-      {tiles.slice(0, 12).map((p) => (
-        <a key={p.id} className="tile" href="#contact" style={{ backgroundImage: `url(${p.web})` }} aria-label={p.story.title}>
+    <div className="uniform reveal">
+      {tiles.map((p, i) => (
+        <button type="button" key={p.id} className="tile" onClick={() => onOpen(list, i)} aria-label={`Open photo from ${p.story.title}`}>
+          <img src={p.web} alt="" loading="lazy" decoding="async" />
           <span>{p.story.title}{p.story.venue ? ` · ${p.story.venue}` : ''}</span>
-        </a>
+        </button>
       ))}
+    </div>
+  );
+}
+
+/** Full-screen photo viewer for the portfolio: arrows, swipe, Escape to close. */
+function PhotoViewer({ photos, index, setIndex, onClose }) {
+  const touch = useRef(null);
+  const count = photos.length;
+  const go = (d) => setIndex((index + d + count) % count);
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowRight') go(1);
+      if (e.key === 'ArrowLeft') go(-1);
+    };
+    window.addEventListener('keydown', onKey);
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = overflow;
+    };
+  });
+  const p = photos[index];
+  return (
+    <div
+      className="s-viewer"
+      role="dialog"
+      aria-label={p.title}
+      onMouseDown={(e) => e.target === e.currentTarget && onClose()}
+      onTouchStart={(e) => { touch.current = e.touches[0].clientX; }}
+      onTouchEnd={(e) => {
+        const dx = e.changedTouches[0].clientX - (touch.current ?? 0);
+        if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1);
+      }}
+    >
+      <button type="button" className="sv-close" onClick={onClose} aria-label="Close">✕</button>
+      {count > 1 && <button type="button" className="sv-nav prev" onClick={() => go(-1)} aria-label="Previous photo">‹</button>}
+      <img key={p.web} src={p.web} alt={p.title} />
+      {count > 1 && <button type="button" className="sv-nav next" onClick={() => go(1)} aria-label="Next photo">›</button>}
+      <div className="sv-bar"><span>{p.title}</span><span>{index + 1} / {count}</span></div>
     </div>
   );
 }
